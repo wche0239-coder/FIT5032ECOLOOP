@@ -1,0 +1,270 @@
+/* =========================================================
+   EcoLoop design tokens
+   Palette drawn from the world the product lives in: kraft
+   paper packaging, market-stall chalkboards and produce
+   crates — not a generic "eco green" gradient.
+   ========================================================= */
+:root {
+  /* Colour */
+  --bg: #FAF8F3;
+  --bg-kraft: #EFE7D8;
+  --bg-kraft-dark: #E4D9C2;
+  --ink: #232420;
+  --ink-soft: #5B5A52;
+  --ink-faint: #8C897C;
+  --line: #DDD3BC;
+  --primary: #2F4F3A;
+  --primary-dark: #1E3327;
+  --primary-soft: #E4ECE4;
+  --rust: #A6512E;
+  --rust-soft: #F3E2D8;
+  --chalk: #E8B93F;
+  --chalk-soft: #FBF0D3;
+  --white: #FFFFFF;
+  --danger: #B3261E;
+
+  /* Type */
+  --font-display: 'Fraunces', 'Iowan Old Style', serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+  --shadow-card: 0 1px 2px rgba(35, 36, 32, 0.06), 0 6px 16px rgba(35, 36, 32, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  scroll-behavior: smooth;
+}
+
+#app { min-height: 100vh; display: flex; flex-direction: column; }
+
+h1, h2, h3, .display-font {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.text-soft { color: var(--ink-soft); }
+.text-faint { color: var(--ink-faint); }
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--primary-dark); }
+
+:focus-visible {
+  outline: 2.5px solid var(--chalk);
+  outline-offset: 2px;
+}
+
+/* ---- Buttons (override Bootstrap's default blue system) ---- */
+.btn {
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.55rem 1.15rem;
+}
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.btn-primary:hover, .btn-primary:focus {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+.btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.btn-outline-primary:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.btn-rust {
+  background: var(--rust);
+  border-color: var(--rust);
+  color: var(--white);
+}
+.btn-rust:hover { background: #8A4025; color: var(--white); }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.btn-ghost:hover { border-color: var(--ink-faint); background: var(--bg-kraft); }
+
+/* ---- Form controls ---- */
+.form-control, .form-select {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  background: var(--white);
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.form-control.is-invalid, .form-select.is-invalid {
+  border-color: var(--danger);
+}
+.field-error {
+  color: var(--danger);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+/* =========================================================
+   Signature element: the kraft market-tag.
+   Used for FREE / price / category chips everywhere — a nod
+   to hand-written tags clipped to items at a market stall.
+   ========================================================= */
+.market-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.22rem 0.6rem 0.22rem 0.5rem;
+  border-radius: 3px;
+  border: 1px dashed var(--ink-faint);
+  background: var(--bg-kraft);
+  color: var(--ink);
+  transform: rotate(-1.1deg);
+  position: relative;
+}
+.market-tag::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--ink-faint);
+  transform: translateY(-50%);
+}
+.market-tag--free {
+  background: var(--chalk-soft);
+  border-color: #C79A2B;
+  color: #6B5211;
+}
+.market-tag--price {
+  background: var(--rust-soft);
+  border-color: var(--rust);
+  color: var(--rust);
+}
+.market-tag--rotate-r { transform: rotate(1deg); }
+
+/* ---- Data / stat figures ---- */
+.stat-figure {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Cards ---- */
+.crate-card {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.crate-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(35,36,32,0.08), 0 14px 24px rgba(35,36,32,0.09);
+}
+
+.placeholder-thumb {
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: var(--white);
+  background: linear-gradient(155deg, var(--cat-color, var(--primary)), rgba(0,0,0,0.12));
+}
+
+/* ---- Section rhythm ---- */
+.section-pad { padding: 3.25rem 0; }
+@media (max-width: 767.98px) {
+  .section-pad { padding: 2.25rem 0; }
+}
+
+.kraft-panel {
+  background: var(--bg-kraft);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.hairline { border-color: var(--line) !important; }
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ---- Nav ---- */
+.eco-navbar {
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.eco-navbar .nav-link {
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.eco-navbar .nav-link.router-link-active {
+  color: var(--primary);
+}
+
+/* Toast */
+.eco-toast {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 1080;
+  background: var(--ink);
+  color: var(--white);
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
