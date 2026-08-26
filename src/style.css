@@ -216,8 +216,23 @@ a:hover { color: var(--primary-dark); }
 
 /* ---- Section rhythm ---- */
 .section-pad { padding: 3.25rem 0; }
-@media (max-width: 767.98px) {
-  .section-pad { padding: 2.25rem 0; }
+
+/* ---- Explicit breakpoint tuning (in addition to Bootstrap's grid) ----
+   Covers the four size bands the app is expected to be tested at:
+   <576px, 576-768px, 992-1200px and >=1400px. */
+@media (max-width: 575.98px) {
+  .section-pad { padding: 2rem 0; }
+  .hero .btn-lg { width: 100%; }
+  .hero-crate { transform: none; }
+}
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .section-pad { padding: 2.5rem 0; }
+}
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .section-pad { padding: 3rem 0; }
+}
+@media (min-width: 1400px) {
+  .section-pad { padding: 4rem 0; }
 }
 
 .kraft-panel {

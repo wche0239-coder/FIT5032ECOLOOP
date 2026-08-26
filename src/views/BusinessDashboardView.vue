@@ -158,25 +158,25 @@ function publish() {
 
       <!-- Stats -->
       <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-3">
           <div class="crate-card p-3 text-center">
             <div class="stat-figure fs-3">{{ totalKgDiverted }}<span class="fs-6"> kg</span></div>
             <div class="text-faint small">Diverted (est., all-time)</div>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-3">
           <div class="crate-card p-3 text-center">
             <div class="stat-figure fs-3">{{ itemsSharedCount }}</div>
             <div class="text-faint small">Items shared</div>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-3">
           <div class="crate-card p-3 text-center">
             <div class="stat-figure fs-3">{{ activeListingsCount }}</div>
             <div class="text-faint small">Active listings</div>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-3">
           <div class="crate-card p-3 text-center">
             <div class="stat-figure fs-3">{{ recurringTemplates.length }}</div>
             <div class="text-faint small">Recurring templates</div>

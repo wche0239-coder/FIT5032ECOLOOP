@@ -151,7 +151,7 @@ function pinStyle(listing) {
       <!-- List view -->
       <div v-if="view === 'list'">
         <div v-if="visibleListings.length" class="row g-3">
-          <div v-for="listing in visibleListings" :key="listing.id" class="col-12 col-sm-6 col-lg-4">
+          <div v-for="listing in visibleListings" :key="listing.id" class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-4">
             <ListingCard :listing="listing" @request="openRequest" />
           </div>
         </div>
