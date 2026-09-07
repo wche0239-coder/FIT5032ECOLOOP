@@ -2,7 +2,7 @@
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
-const { currentUser, isLoggedIn, logout } = useAuth()
+const { currentUser, isLoggedIn, role, logout } = useAuth()
 const router = useRouter()
 
 function handleLogout() {
@@ -37,8 +37,11 @@ function handleLogout() {
           <li class="nav-item">
             <RouterLink class="nav-link" to="/post-item">Post an item</RouterLink>
           </li>
-          <li class="nav-item">
+          <li v-if="!isLoggedIn || role === 'business'" class="nav-item">
             <RouterLink class="nav-link" to="/business">Business dashboard</RouterLink>
+          </li>
+          <li v-if="role === 'admin'" class="nav-item">
+            <RouterLink class="nav-link" to="/admin">Admin</RouterLink>
           </li>
         </ul>
 
@@ -46,6 +49,7 @@ function handleLogout() {
           <template v-if="isLoggedIn">
             <span class="text-soft small d-none d-lg-inline">
               <i class="bi bi-person-circle me-1"></i>{{ currentUser.name }}
+              <span class="market-tag ms-1" style="transform: none; padding: 0.1rem 0.4rem;">{{ role }}</span>
             </span>
             <button class="btn btn-ghost btn-sm" @click="handleLogout">Log out</button>
           </template>
