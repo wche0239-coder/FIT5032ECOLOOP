@@ -5,11 +5,13 @@ import { useAuth } from '../composables/useAuth'
 import { required, minLength, isEmail, matches, runValidators } from '../utils/validators'
 
 const router = useRouter()
-const { login } = useAuth()
+const { register } = useAuth()
 
 const form = reactive({ name: '', email: '', password: '', confirmPassword: '', accountType: 'individual' })
 const touched = reactive({})
 const submitted = ref(false)
+const serverError = ref('')
+const isSubmitting = ref(false)
 
 const errors = computed(() => ({
   name: runValidators(form.name, [required, minLength(2)]),
@@ -23,12 +25,26 @@ const errors = computed(() => ({
 const hasErrors = computed(() => Object.values(errors.value).some(Boolean))
 const showError = (f) => (submitted.value || touched[f]) && errors.value[f]
 
-function onSubmit() {
+async function onSubmit() {
   submitted.value = true
+  serverError.value = ''
   Object.keys(form).forEach((f) => (touched[f] = true))
   if (hasErrors.value) return
-  login({ name: form.name, email: form.email, accountType: form.accountType })
-  router.push(form.accountType === 'business' ? '/business' : '/browse')
+
+  isSubmitting.value = true
+  try {
+    await register({
+      name: form.name,
+      email: form.email,
+      password: form.password,
+      role: form.accountType,
+    })
+    router.push(form.accountType === 'business' ? '/business' : '/browse')
+  } catch (err) {
+    serverError.value = err.message || 'Something went wrong, please try again.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -39,6 +55,10 @@ function onSubmit() {
       <h1 class="h3 mb-4 text-center">Create your account</h1>
 
       <form class="crate-card p-4" @submit.prevent="onSubmit">
+        <div v-if="serverError" class="alert alert-danger py-2 small" role="alert">
+          <i class="bi bi-exclamation-triangle me-1"></i>{{ serverError }}
+        </div>
+
         <label class="field-label" for="accountType">I'm signing up as</label>
         <div class="btn-group w-100 mb-3" role="group">
           <input id="typeIndividual" v-model="form.accountType" type="radio" class="btn-check" value="individual" />
@@ -83,7 +103,9 @@ function onSubmit() {
         />
         <p v-if="showError('confirmPassword')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.confirmPassword }}</p>
 
-        <button type="submit" class="btn btn-primary w-100 mt-3">Create account</button>
+        <button type="submit" class="btn btn-primary w-100 mt-3" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Creating account…' : 'Create account' }}
+        </button>
         <p class="text-faint small text-center mt-3 mb-0">
           Already have an account? <router-link to="/login">Log in</router-link>
         </p>
