@@ -4,10 +4,12 @@ import { useRouter } from 'vue-router'
 import { categories } from '../data/categories'
 import { useListings } from '../composables/useListings'
 import { useLocalStorage } from '../composables/useLocalStorage'
+import { useAuth } from '../composables/useAuth'
 import { required, minLength, isPositiveNumber, runValidators } from '../utils/validators'
 
 const router = useRouter()
 const { addListing } = useListings()
+const { currentUser } = useAuth()
 const drafts = useLocalStorage('ecoloop_drafts', [])
 
 const step = ref('details') // 'details' | 'pickup'
@@ -107,8 +109,8 @@ function publish() {
     isFree: form.listingType === 'free',
     price: form.listingType === 'sale' ? Number(form.price) : null,
     distanceKm: 0.5,
-    ownerType: 'individual',
-    ownerName: 'You',
+    ownerType: currentUser.value?.role === 'business' ? 'business' : 'individual',
+    ownerName: currentUser.value?.name || 'You',
     suburb: form.pickupPoint,
     pickupWindow: availability,
   })

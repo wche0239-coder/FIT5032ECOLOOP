@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import { useLocalStorage } from './useLocalStorage'
 import { seedListings } from '../data/seedListings'
+import { sanitizeObject } from '../utils/sanitize'
 
 // Module-level (singleton) reactive state so every component that
 // imports useListings() reads and writes the very same JS data
@@ -23,11 +24,17 @@ function estimateKg(item) {
 }
 
 export function useListings() {
+  // Free-text fields get an extra sanitisation pass before they're
+  // persisted (BR C.4: defense-in-depth beyond Vue's default
+  // template escaping — see src/utils/sanitize.js).
+  const TEXT_FIELDS = ['title', 'description', 'ownerName', 'suburb']
+
   function addListing(item) {
+    const clean = sanitizeObject(item, TEXT_FIELDS)
     const newItem = {
       id: `l-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       postedAt: new Date().toISOString(),
-      ...item,
+      ...clean,
     }
     listings.value = [newItem, ...listings.value]
     return newItem
@@ -39,7 +46,7 @@ export function useListings() {
       postedAt: new Date().toISOString(),
       ownerType: 'business',
       isFree: false,
-      ...item,
+      ...sanitizeObject(item, TEXT_FIELDS),
     }))
     listings.value = [...stamped, ...listings.value]
     return stamped
@@ -50,9 +57,10 @@ export function useListings() {
   }
 
   function sendRequest(listingId, message) {
+    const clean = sanitizeObject({ message }, ['message'])
     requests.value = [
       ...requests.value,
-      { id: `r-${Date.now()}`, listingId, message, sentAt: new Date().toISOString() },
+      { id: `r-${Date.now()}`, listingId, message: clean.message, sentAt: new Date().toISOString() },
     ]
   }
 

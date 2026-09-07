@@ -1,7 +1,7 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import { useListings } from '../composables/useListings'
-import MarketTag from '../components/MarketTag.vue'
+import missionQuote from '../assets/site/mission-quote.png'
 
 const { totalItems, totalKgDiverted, businessListings } = useListings()
 </script>
@@ -12,15 +12,15 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
     <section class="hero section-pad">
       <div class="container">
         <div class="row align-items-center g-5">
-          <div class="col-12 col-lg-7">
+          <div class="col-12 col-lg-6">
             <span class="market-tag mb-3"><i class="bi bi-geo-alt"></i> Melbourne, VIC</span>
             <h1 class="display-1-custom mb-3">
               Your spare shelf is<br />someone else's fix.
             </h1>
             <p class="lead text-soft mb-4" style="max-width: 46ch;">
-              EcoLoop is a local exchange where residents and small businesses
-              give, swap and resell what they don't need — before it ever
-              reaches a landfill.
+              EcoLoop is a local exchange where residents and small
+              businesses give, swap and resell what they don't need —
+              before it ever reaches a landfill.
             </p>
             <div class="d-flex flex-wrap gap-2">
               <RouterLink to="/browse" class="btn btn-primary btn-lg">Browse listings</RouterLink>
@@ -43,17 +43,16 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
             </div>
           </div>
 
-          <div class="col-12 col-lg-5">
+          <div class="col-12 col-lg-6">
             <div class="hero-crate crate-card p-4">
               <div class="d-flex justify-content-between align-items-start mb-3">
-                <span class="eyebrow">Fresh nearby</span>
-                <MarketTag variant="free" rotate-right>FREE</MarketTag>
+                <span class="eyebrow">Our mission</span>
               </div>
-              <div class="placeholder-thumb rounded mb-3" style="--cat-color:#5C7A5B; aspect-ratio: 16/10;">
-                <i class="bi bi-house-door"></i>
+              <div class="mission-thumb rounded mb-3">
+                <img :src="missionQuote" alt="GreenLoop Collective: make what's useless useful again" />
               </div>
-              <h3 class="h6 mb-1">Timber toddler bed frame</h3>
-              <p class="text-soft small mb-0">1.2 km away · Box Hill · Weekday evenings</p>
+              <h3 class="h6 mb-1">GreenLoop Collective</h3>
+              <p class="text-soft small mb-0">Melbourne, VIC · the team behind EcoLoop</p>
             </div>
           </div>
         </div>
@@ -63,12 +62,12 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
     <!-- Two sides -->
     <section class="section-pad kraft-panel">
       <div class="container">
-        <div class="eyebrow mb-2">Two sides, one loop</div>
+        <p class="eyebrow mb-2">Two sides, one loop</p>
         <h2 class="h3 mb-5" style="max-width: 34ch;">Built for people clearing a shelf, and shops clearing a stockroom.</h2>
         <div class="row g-4">
           <div class="col-12 col-md-4">
             <div class="crate-card p-4 h-100">
-              <i class="bi bi-house-heart fs-3 text-primary-emphasis" style="color: var(--primary);"></i>
+              <i class="bi bi-house-heart fs-3" style="color: var(--signal);"></i>
               <h3 class="h6 mt-3">For time-poor givers</h3>
               <p class="text-soft small mb-0">
                 List an outgrown item in under two minutes, set it free or for a
@@ -78,7 +77,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
           </div>
           <div class="col-12 col-md-4">
             <div class="crate-card p-4 h-100">
-              <i class="bi bi-search fs-3" style="color: var(--rust);"></i>
+              <i class="bi bi-search fs-3" style="color: var(--caution);"></i>
               <h3 class="h6 mt-3">For budget-conscious finders</h3>
               <p class="text-soft small mb-0">
                 Filter by distance and category, get notified when something
@@ -88,7 +87,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
           </div>
           <div class="col-12 col-md-4">
             <div class="crate-card p-4 h-100">
-              <i class="bi bi-shop fs-3" style="color: #8C6A3E;"></i>
+              <i class="bi bi-shop fs-3" style="color: var(--ink-soft);"></i>
               <h3 class="h6 mt-3">For local businesses</h3>
               <p class="text-soft small mb-0">
                 Bulk-upload weekly surplus with a CSV, save it as a recurring
@@ -100,10 +99,10 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
       </div>
     </section>
 
-    <!-- How it works -->
+    <!-- How it works: a genuine 3-step sequence, so numbering earns its place -->
     <section id="how-it-works" class="section-pad">
       <div class="container">
-        <div class="eyebrow mb-2">How it works</div>
+        <p class="eyebrow mb-2">How it works</p>
         <h2 class="h3 mb-5">Three steps, start to pickup.</h2>
         <div class="row g-4">
           <div v-for="(step, i) in [
@@ -126,7 +125,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
       <div class="container">
         <div class="row g-5 align-items-center">
           <div class="col-12 col-lg-7">
-            <div class="eyebrow mb-2">About EcoLoop</div>
+            <p class="eyebrow mb-2">About EcoLoop</p>
             <h2 class="h3 mb-3">Built by GreenLoop Collective for one Melbourne neighbourhood at a time.</h2>
             <p class="text-soft mb-0" style="max-width: 60ch;">
               Apps built for individuals rarely handle business volumes, and
@@ -138,13 +137,13 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
           </div>
           <div class="col-12 col-lg-5">
             <div class="crate-card p-4">
-              <div class="eyebrow mb-2">Our five commitments</div>
+              <p class="eyebrow mb-2">Our five commitments</p>
               <ul class="list-unstyled small text-soft d-flex flex-column gap-2 mb-0">
-                <li><i class="bi bi-check2 me-2" style="color: var(--primary);"></i>Free listings stay free, always</li>
-                <li><i class="bi bi-check2 me-2" style="color: var(--primary);"></i>ID checks and ratings for safer pickups</li>
-                <li><i class="bi bi-check2 me-2" style="color: var(--primary);"></i>Visible impact — kg diverted, items reused</li>
-                <li><i class="bi bi-check2 me-2" style="color: var(--primary);"></i>A separate, efficient tool for business surplus</li>
-                <li><i class="bi bi-check2 me-2" style="color: var(--primary);"></i>Community guidelines that are actually enforced</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>Free listings stay free, always</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>ID checks and ratings for safer pickups</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>Visible impact — kg diverted, items reused</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>A separate, efficient tool for business surplus</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>Community guidelines that are actually enforced</li>
               </ul>
             </div>
           </div>
@@ -166,16 +165,29 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
 .display-1-custom {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
-  line-height: 1.08;
-  letter-spacing: -0.015em;
+  font-size: clamp(2.1rem, 4.4vw, 3.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
-.hero { background: var(--bg); }
-.hero-crate { transform: rotate(1deg); }
+.hero { background: var(--paper); }
+
+.mission-thumb {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.mission-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
 .step-number {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--rust);
+  color: var(--caution);
   font-size: 1.1rem;
 }
 </style>

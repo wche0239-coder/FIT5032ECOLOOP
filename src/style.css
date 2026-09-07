@@ -1,44 +1,46 @@
 /* =========================================================
-   EcoLoop design tokens
-   Palette drawn from the world the product lives in: kraft
-   paper packaging, market-stall chalkboards and produce
-   crates — not a generic "eco green" gradient.
+   EcoLoop design tokens — v2
+   Concept: a local transfer-station docket / council pickup
+   ticket, not a lifestyle-market aesthetic. The subject is
+   "handing off a physical thing to someone nearby" — the
+   visual language leans on paper dockets, perforated tear-off
+   tags and civic signage rather than kraft-paper romance.
    ========================================================= */
 :root {
-  /* Colour */
-  --bg: #FAF8F3;
-  --bg-kraft: #EFE7D8;
-  --bg-kraft-dark: #E4D9C2;
-  --ink: #232420;
-  --ink-soft: #5B5A52;
-  --ink-faint: #8C897C;
-  --line: #DDD3BC;
-  --primary: #2F4F3A;
-  --primary-dark: #1E3327;
-  --primary-soft: #E4ECE4;
-  --rust: #A6512E;
-  --rust-soft: #F3E2D8;
-  --chalk: #E8B93F;
-  --chalk-soft: #FBF0D3;
+  /* Colour — cool paper, not warm cream; teal-green signal, not
+     bottle-green; burnt orange used only as a small tag accent. */
+  --paper: #EFF1EA;
+  --paper-dim: #E1E5D9;
+  --panel: #FFFFFF;
+  --ink: #17211C;
+  --ink-soft: #4B5750;
+  --ink-faint: #7C877E;
+  --line: #C7CDBA;
+  --line-strong: #9AA491;
+  --signal: #1F5C4D;
+  --signal-dark: #123D33;
+  --signal-tint: #DEEAE4;
+  --caution: #C4501F;
+  --caution-tint: #F6E2D5;
+  --chalk: #D9B23C;
+  --chalk-tint: #F7EDCB;
   --white: #FFFFFF;
-  --danger: #B3261E;
+  --danger: #A6291D;
 
   /* Type */
-  --font-display: 'Fraunces', 'Iowan Old Style', serif;
+  --font-display: 'Space Grotesk', 'Arial Narrow', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
 
   /* Shape */
-  --radius-sm: 4px;
-  --radius-md: 10px;
-  --radius-lg: 18px;
-  --shadow-card: 0 1px 2px rgba(35, 36, 32, 0.06), 0 6px 16px rgba(35, 36, 32, 0.06);
+  --radius-sm: 3px;
+  --radius-md: 4px;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
-  background: var(--bg);
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
   scroll-behavior: smooth;
@@ -53,27 +55,26 @@ h1, h2, h3, .display-font {
   color: var(--ink);
 }
 
+/* Quiet section label — informational, not decorative chrome.
+   No tracked all-caps, no colour treatment. */
 .eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--primary);
-  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  font-weight: 500;
 }
 
 .text-soft { color: var(--ink-soft); }
 .text-faint { color: var(--ink-faint); }
 
-a { color: var(--primary); text-decoration: none; }
-a:hover { color: var(--primary-dark); }
+a { color: var(--signal); text-decoration: none; }
+a:hover { color: var(--signal-dark); }
 
 :focus-visible {
-  outline: 2.5px solid var(--chalk);
+  outline: 2.5px solid var(--caution);
   outline-offset: 2px;
 }
 
-/* ---- Buttons (override Bootstrap's default blue system) ---- */
+/* ---- Buttons ---- */
 .btn {
   border-radius: var(--radius-sm);
   font-weight: 600;
@@ -81,44 +82,44 @@ a:hover { color: var(--primary-dark); }
   padding: 0.55rem 1.15rem;
 }
 .btn-primary {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--signal);
+  border-color: var(--signal);
 }
 .btn-primary:hover, .btn-primary:focus {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background: var(--signal-dark);
+  border-color: var(--signal-dark);
 }
 .btn-outline-primary {
-  color: var(--primary);
-  border-color: var(--primary);
+  color: var(--signal);
+  border-color: var(--signal);
 }
 .btn-outline-primary:hover {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--signal);
+  border-color: var(--signal);
 }
 .btn-rust {
-  background: var(--rust);
-  border-color: var(--rust);
+  background: var(--caution);
+  border-color: var(--caution);
   color: var(--white);
 }
-.btn-rust:hover { background: #8A4025; color: var(--white); }
+.btn-rust:hover { background: #9C3E17; color: var(--white); }
 .btn-ghost {
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   color: var(--ink);
 }
-.btn-ghost:hover { border-color: var(--ink-faint); background: var(--bg-kraft); }
+.btn-ghost:hover { border-color: var(--ink-soft); background: var(--paper-dim); }
 
 /* ---- Form controls ---- */
 .form-control, .form-select {
-  border: 1.5px solid var(--line);
+  border: 1.5px solid var(--line-strong);
   border-radius: var(--radius-sm);
   padding: 0.55rem 0.75rem;
-  background: var(--white);
+  background: var(--panel);
 }
 .form-control:focus, .form-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-soft);
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-tint);
 }
 .form-control.is-invalid, .form-select.is-invalid {
   border-color: var(--danger);
@@ -140,68 +141,86 @@ a:hover { color: var(--primary-dark); }
 }
 
 /* =========================================================
-   Signature element: the kraft market-tag.
-   Used for FREE / price / category chips everywhere — a nod
-   to hand-written tags clipped to items at a market stall.
+   Signature element: the ticket tag.
+   A perforated tear-off stub, like a claim ticket at a tip
+   shop or transfer station — used for FREE / price labels.
+   The perforation is a real structural cue (this is the part
+   you'd tear off to claim the item), not decoration.
    ========================================================= */
 .market-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
   font-weight: 600;
-  padding: 0.22rem 0.6rem 0.22rem 0.5rem;
-  border-radius: 3px;
-  border: 1px dashed var(--ink-faint);
-  background: var(--bg-kraft);
+  padding: 0.28rem 0.6rem 0.28rem 0.7rem;
+  border-radius: 0;
+  border: 1.5px solid var(--ink);
+  border-left-style: dashed;
+  background: var(--panel);
   color: var(--ink);
-  transform: rotate(-1.1deg);
   position: relative;
 }
 .market-tag::before {
   content: '';
   position: absolute;
-  left: -3px;
+  left: -4px;
   top: 50%;
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--bg);
-  border: 1px solid var(--ink-faint);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
   transform: translateY(-50%);
 }
 .market-tag--free {
-  background: var(--chalk-soft);
-  border-color: #C79A2B;
-  color: #6B5211;
+  background: var(--chalk-tint);
+  border-color: #A9852A;
+  color: #5A4515;
 }
 .market-tag--price {
-  background: var(--rust-soft);
-  border-color: var(--rust);
-  color: var(--rust);
+  background: var(--caution-tint);
+  border-color: var(--caution);
+  color: #7A340F;
 }
-.market-tag--rotate-r { transform: rotate(1deg); }
+.market-tag--rotate-r { transform: none; }
 
-/* ---- Data / stat figures ---- */
+/* ---- Data / stat figures ----
+   Space Grotesk (the display face) rather than a decorative
+   monospace default — reserved for genuinely tabular data. */
 .stat-figure {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 
-/* ---- Cards ---- */
+/* ---- Panels (forms, dashboard tiles) — flat, no shadow ---- */
 .crate-card {
-  background: var(--white);
-  border: 1.5px solid var(--line);
+  background: var(--panel);
+  border: 1.5px solid var(--line-strong);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
   overflow: hidden;
-  transition: transform .15s ease, box-shadow .15s ease;
 }
-.crate-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(35,36,32,0.08), 0 14px 24px rgba(35,36,32,0.09);
+
+/* ---- Ticket-style listing card ----
+   Distinct from a generic rounded SaaS card: sharp corners,
+   a perforation row where the "tag" would tear off, no shadow. */
+.ticket-card {
+  background: var(--panel);
+  border: 1.5px solid var(--ink);
+  border-radius: 0;
+  overflow: hidden;
+  transition: border-color .12s ease;
+}
+.ticket-card:hover { border-color: var(--signal); }
+.ticket-card .perforation {
+  height: 8px;
+  background-image: radial-gradient(circle, var(--paper) 2.5px, transparent 2.6px);
+  background-size: 14px 8px;
+  background-position: 7px center;
+  border-bottom: 1px dashed var(--line-strong);
 }
 
 .placeholder-thumb {
@@ -211,19 +230,35 @@ a:hover { color: var(--primary-dark); }
   justify-content: center;
   font-size: 1.6rem;
   color: var(--white);
-  background: linear-gradient(155deg, var(--cat-color, var(--primary)), rgba(0,0,0,0.12));
+  background: var(--cat-color, var(--signal));
+  overflow: hidden;
+}
+.thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Small bordered meta chips — replaces "A · B · C" dot strings */
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.4rem;
+  background: var(--paper-dim);
 }
 
 /* ---- Section rhythm ---- */
 .section-pad { padding: 3.25rem 0; }
 
-/* ---- Explicit breakpoint tuning (in addition to Bootstrap's grid) ----
-   Covers the four size bands the app is expected to be tested at:
-   <576px, 576-768px, 992-1200px and >=1400px. */
 @media (max-width: 575.98px) {
   .section-pad { padding: 2rem 0; }
   .hero .btn-lg { width: 100%; }
-  .hero-crate { transform: none; }
 }
 @media (min-width: 576px) and (max-width: 767.98px) {
   .section-pad { padding: 2.5rem 0; }
@@ -236,7 +271,7 @@ a:hover { color: var(--primary-dark); }
 }
 
 .kraft-panel {
-  background: var(--bg-kraft);
+  background: var(--paper-dim);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
@@ -246,17 +281,18 @@ a:hover { color: var(--primary-dark); }
 .brand-mark {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.35rem;
-  color: var(--primary);
+  font-size: 1.25rem;
+  color: var(--ink);
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
 }
+.brand-mark i { color: var(--signal); }
 
 /* ---- Nav ---- */
 .eco-navbar {
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  border-bottom: 1.5px solid var(--ink);
 }
 .eco-navbar .nav-link {
   color: var(--ink-soft);
@@ -264,7 +300,7 @@ a:hover { color: var(--primary-dark); }
   font-size: 0.92rem;
 }
 .eco-navbar .nav-link.router-link-active {
-  color: var(--primary);
+  color: var(--signal);
 }
 
 /* Toast */
