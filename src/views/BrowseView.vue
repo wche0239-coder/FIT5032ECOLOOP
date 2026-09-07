@@ -1,10 +1,16 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useListings } from '../composables/useListings'
+import { useAuth } from '../composables/useAuth'
+import { setFlash } from '../composables/useFlash'
 import { categories, getCategory } from '../data/categories'
 import ListingCard from '../components/ListingCard.vue'
 import RequestModal from '../components/RequestModal.vue'
+import RatingModal from '../components/RatingModal.vue'
 
+const router = useRouter()
+const { isLoggedIn } = useAuth()
 const { listings, sendRequest } = useListings()
 
 // ---- Filter / sort state (dynamic, reactive — BR B.2) ----
@@ -59,6 +65,20 @@ function onSent(message) {
   sendRequest(activeListing.value.id, message)
   toastMessage.value = `Request sent for "${activeListing.value.title}"`
   setTimeout(() => (toastMessage.value = ''), 3200)
+}
+
+// ---- Rating modal (requires login — BR C.1/C.2) ----
+const ratingTarget = ref(null)
+function openRating(target) {
+  if (!isLoggedIn.value) {
+    setFlash('Please log in to leave a rating.')
+    router.push({ path: '/login', query: { redirect: '/browse' } })
+    return
+  }
+  ratingTarget.value = target
+}
+function closeRating() {
+  ratingTarget.value = null
 }
 
 // ---- Pseudo-map placement (no external map dependency) ----
@@ -152,7 +172,7 @@ function pinStyle(listing) {
       <div v-if="view === 'list'">
         <div v-if="visibleListings.length" class="row g-3">
           <div v-for="listing in visibleListings" :key="listing.id" class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-4">
-            <ListingCard :listing="listing" @request="openRequest" />
+            <ListingCard :listing="listing" @request="openRequest" @rate="openRating" />
           </div>
         </div>
         <div v-else class="text-center py-5 text-soft">
@@ -190,6 +210,7 @@ function pinStyle(listing) {
     </div>
 
     <RequestModal :listing="activeListing" @close="closeRequest" @sent="onSent" />
+    <RatingModal :target="ratingTarget" @close="closeRating" />
 
     <transition name="fade">
       <div v-if="toastMessage" class="eco-toast">
