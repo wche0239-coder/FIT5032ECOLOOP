@@ -134,6 +134,7 @@ async function publish() {
     price: form.listingType === 'sale' ? Number(form.price) : null,
     distanceKm: 0.5,
     ownerType: currentUser.value?.role === 'business' ? 'business' : 'individual',
+    ownerId: currentUser.value?.id,
     ownerName: currentUser.value?.name || 'You',
     suburb: form.pickupPoint,
     pickupWindow: availability,

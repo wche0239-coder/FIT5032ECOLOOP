@@ -1,11 +1,13 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { useListings } from '../composables/useListings'
+import { useAuth } from '../composables/useAuth'
 import { useLocalStorage } from '../composables/useLocalStorage'
 import { categories } from '../data/categories'
 import { required, isPositiveInteger, runValidators } from '../utils/validators'
 
 const { listings, businessListings, totalKgDiverted, addBulkListings } = useListings()
+const { currentUser } = useAuth()
 const recurringTemplates = useLocalStorage('ecoloop_templates', [])
 
 const activeTab = ref('csv') // 'csv' | 'manual'
@@ -127,7 +129,8 @@ function publish() {
       description: `Bulk-listed business surplus: ${r.item}.`,
       condition: 'New',
       distanceKm: 3.1,
-      ownerName: 'Your business',
+      ownerId: currentUser.value?.id,
+      ownerName: currentUser.value?.name || 'Your business',
       suburb: 'Your storefront',
       pickupWindow: 'Weekday mornings',
     }))

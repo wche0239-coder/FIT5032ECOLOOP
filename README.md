@@ -125,6 +125,14 @@ guard — unauthorised visits are redirected with an on-screen explanation
 silently failing. `/business` requires `business` or `admin`; `/admin`
 requires `admin`; `/post-item` and rating requires being logged in at all.
 
+**Deleting listings** follows the same rules: each listing records the
+Firebase user id of whoever posted it (`ownerId`), and the delete button
+on a listing card only appears for that owner or an admin. The check
+(`canDeleteListing` in `src/composables/useListings.js`) runs again inside
+`removeListing`, so hiding the button isn't the only safeguard. Deleting
+asks for confirmation first, in an accessible dialog whose focus starts on
+Cancel.
+
 **BR (C.3) — Aggregated ratings (two rated aspects)**
 `src/composables/useRatings.js` supports rating two different things:
 individual listings, and sellers (a trust/reputation score) — separate

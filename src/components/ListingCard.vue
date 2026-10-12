@@ -9,8 +9,10 @@ import StarRating from './StarRating.vue'
 
 const props = defineProps({
   listing: { type: Object, required: true },
+  // Shown only to the listing's owner or an admin (decided by the parent).
+  canDelete: { type: Boolean, default: false },
 })
-const emit = defineEmits(['request', 'rate'])
+const emit = defineEmits(['request', 'rate', 'delete'])
 
 const category = computed(() => getCategory(props.listing.category))
 // Prefer a photo of this exact listing; fall back to a category photo.
@@ -83,9 +85,20 @@ const sellerCount = computed(() => getSellerRatingsFor(props.listing.ownerName).
         <MarketTag :variant="listing.isFree ? 'free' : 'price'">
           {{ listing.isFree ? 'FREE' : `$${listing.price}` }}
         </MarketTag>
-        <button type="button" class="btn btn-sm btn-primary" @click="emit('request', listing)">
-          Request<span class="visually-hidden"> {{ listing.title }}</span>
-        </button>
+        <div class="d-flex gap-2">
+          <button
+            v-if="canDelete"
+            type="button"
+            class="btn btn-sm btn-ghost text-danger"
+            @click="emit('delete', listing)"
+          >
+            <i class="bi bi-trash" aria-hidden="true"></i>
+            <span class="visually-hidden">Delete {{ listing.title }}</span>
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" @click="emit('request', listing)">
+            Request<span class="visually-hidden"> {{ listing.title }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

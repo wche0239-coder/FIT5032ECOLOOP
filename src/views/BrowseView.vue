@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineAsyncComponent } from 'vue'
+import { ref, computed, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useListings } from '../composables/useListings'
 import { useAuth } from '../composables/useAuth'
@@ -8,14 +8,15 @@ import { categories } from '../data/categories'
 import ListingCard from '../components/ListingCard.vue'
 import RequestModal from '../components/RequestModal.vue'
 import RatingModal from '../components/RatingModal.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 // BR (E.2) — the Mapbox map is loaded only when someone opens Map view,
 // so the list view stays fast.
 const ListingMap = defineAsyncComponent(() => import('../components/ListingMap.vue'))
 
 const router = useRouter()
-const { isLoggedIn } = useAuth()
-const { listings, sendRequest } = useListings()
+const { isLoggedIn, currentUser } = useAuth()
+const { listings, sendRequest, removeListing, canDeleteListing } = useListings()
 
 // ---- Filter / sort state (dynamic, reactive — BR B.2) ----
 const search = ref('')
@@ -69,6 +70,27 @@ function onSent(message) {
   sendRequest(activeListing.value.id, message)
   toastMessage.value = `Request sent for "${activeListing.value.title}"`
   setTimeout(() => (toastMessage.value = ''), 3200)
+}
+
+// ---- Delete (owner or admin only — BR C.2) ----
+const pendingDelete = ref(null)
+const canDelete = (listing) => canDeleteListing(listing, currentUser.value)
+
+function askDelete(listing) {
+  pendingDelete.value = listing
+}
+async function confirmDelete() {
+  const listing = pendingDelete.value
+  pendingDelete.value = null
+  const removed = removeListing(listing.id, currentUser.value)
+  toastMessage.value = removed ? `Deleted “${listing.title}”` : "You can't delete that listing."
+  setTimeout(() => (toastMessage.value = ''), 3200)
+  // The card (and its button) is gone, so put keyboard focus somewhere
+  // sensible instead of letting it fall back to the top of the page.
+  await nextTick()
+  const heading = document.querySelector('main h1')
+  heading?.setAttribute('tabindex', '-1')
+  heading?.focus()
 }
 
 // ---- Rating modal (requires login — BR C.1/C.2) ----
@@ -169,7 +191,13 @@ function closeRating() {
       <div v-if="view === 'list'">
         <div v-if="visibleListings.length" class="row g-3">
           <div v-for="listing in visibleListings" :key="listing.id" class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-4">
-            <ListingCard :listing="listing" @request="openRequest" @rate="openRating" />
+            <ListingCard
+              :listing="listing"
+              :can-delete="canDelete(listing)"
+              @request="openRequest"
+              @rate="openRating"
+              @delete="askDelete"
+            />
           </div>
         </div>
         <div v-else class="text-center py-5 text-soft">
@@ -188,6 +216,14 @@ function closeRating() {
 
     <RequestModal :listing="activeListing" @close="closeRequest" @sent="onSent" />
     <RatingModal :target="ratingTarget" @close="closeRating" />
+    <ConfirmDialog
+      :open="!!pendingDelete"
+      title="Delete this listing?"
+      :message="pendingDelete ? `“${pendingDelete.title}” will be removed from EcoLoop. This can't be undone.` : ''"
+      confirm-label="Delete listing"
+      @confirm="confirmDelete"
+      @cancel="pendingDelete = null"
+    />
 
     <transition name="fade">
       <div v-if="toastMessage" class="eco-toast" role="status">
