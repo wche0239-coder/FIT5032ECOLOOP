@@ -6,6 +6,8 @@ import { useListings } from '../composables/useListings'
 import { useLocalStorage } from '../composables/useLocalStorage'
 import { useAuth } from '../composables/useAuth'
 import { required, minLength, isPositiveNumber, runValidators } from '../utils/validators'
+import { hasMapbox, searchPlaces } from '../utils/mapboxApi'
+import { suburbCentreFor } from '../data/suburbs'
 
 const router = useRouter()
 const { addListing } = useListings()
@@ -82,7 +84,24 @@ function saveDraft() {
   setTimeout(() => (successMessage.value = ''), 3500)
 }
 
-function publish() {
+// Turns the pickup point into map coordinates (BR E.2) so the listing
+// appears in the right place. Falls back to a known suburb centre.
+async function locatePickup(place) {
+  if (hasMapbox) {
+    try {
+      const [best] = await searchPlaces(place)
+      if (best) return { lng: best.coords[0], lat: best.coords[1] }
+    } catch (err) {
+      console.warn('[PostItem] Geocoding failed, using suburb centre', err)
+    }
+  }
+  const centre = suburbCentreFor(place)
+  return centre ? { lng: centre[0], lat: centre[1] } : {}
+}
+
+const isPublishing = ref(false)
+
+async function publish() {
   submitted.value = true
   detailsFields.forEach(touch)
   pickupFields.forEach(touch)
@@ -101,7 +120,12 @@ function publish() {
     form.weekends ? 'Weekends' : null,
   ].filter(Boolean).join(' & ')
 
+  isPublishing.value = true
+  const coords = await locatePickup(form.pickupPoint)
+  isPublishing.value = false
+
   addListing({
+    ...coords,
     title: form.title.trim(),
     condition: form.condition,
     category: form.category,
@@ -128,20 +152,26 @@ function publish() {
       <!-- Step tabs -->
       <div class="d-flex gap-2 mb-4">
         <button
+          type="button"
           class="btn btn-sm"
           :class="step === 'details' ? 'btn-primary' : 'btn-ghost'"
+          :aria-current="step === 'details' ? 'step' : undefined"
           @click="step = 'details'"
         >
           1. Details
-          <i v-if="submitted && detailsHasErrors" class="bi bi-exclamation-circle-fill text-danger ms-1"></i>
+          <i v-if="submitted && detailsHasErrors" class="bi bi-exclamation-circle-fill text-danger ms-1" aria-hidden="true"></i>
+          <span v-if="submitted && detailsHasErrors" class="visually-hidden">(has errors)</span>
         </button>
         <button
+          type="button"
           class="btn btn-sm"
           :class="step === 'pickup' ? 'btn-primary' : 'btn-ghost'"
+          :aria-current="step === 'pickup' ? 'step' : undefined"
           @click="step = 'pickup'"
         >
           2. Pickup & Publish
-          <i v-if="submitted && pickupHasErrors" class="bi bi-exclamation-circle-fill text-danger ms-1"></i>
+          <i v-if="submitted && pickupHasErrors" class="bi bi-exclamation-circle-fill text-danger ms-1" aria-hidden="true"></i>
+          <span v-if="submitted && pickupHasErrors" class="visually-hidden">(has errors)</span>
         </button>
       </div>
 
@@ -157,7 +187,7 @@ function publish() {
               placeholder="e.g. Timber toddler bed frame"
               @blur="touch('title')"
             />
-            <p v-if="showError('title')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.title }}</p>
+            <p v-if="showError('title')" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.title }}</p>
           </div>
           <div class="col-12 col-md-5">
             <label class="field-label" for="condition">Condition</label>
@@ -167,7 +197,7 @@ function publish() {
               <option>Like New</option>
               <option>Used</option>
             </select>
-            <p v-if="showError('condition')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.condition }}</p>
+            <p v-if="showError('condition')" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.condition }}</p>
           </div>
 
           <div class="col-12 col-md-7">
@@ -176,7 +206,7 @@ function publish() {
               <option value="" disabled>Select category</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.label }}</option>
             </select>
-            <p v-if="showError('category')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.category }}</p>
+            <p v-if="showError('category')" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.category }}</p>
           </div>
 
           <div class="col-12">
@@ -187,31 +217,38 @@ function publish() {
               placeholder="Tell people what it is, its condition, and anything they should know."
               @blur="touch('description')"
             ></textarea>
-            <p v-if="showError('description')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.description }}</p>
+            <p v-if="showError('description')" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.description }}</p>
           </div>
 
           <div class="col-12">
-            <label class="field-label">Photos</label>
+            <p id="photos-label" class="field-label">Photos</p>
             <div class="d-flex flex-wrap gap-2">
               <div v-for="(photo, i) in photos" :key="photo.url" class="photo-thumb">
                 <img :src="photo.url" :alt="photo.name" />
-                <button class="photo-thumb__remove" type="button" aria-label="Remove photo" @click="removePhoto(i)">
-                  <i class="bi bi-x"></i>
+                <button class="photo-thumb__remove" type="button" :aria-label="`Remove photo ${photo.name}`" @click="removePhoto(i)">
+                  <i class="bi bi-x" aria-hidden="true"></i>
                 </button>
               </div>
+              <!-- Input is visually hidden (not display:none) so it stays
+                   in the tab order; the label shows a focus ring. -->
               <label v-if="photos.length < 6" class="photo-add">
-                <i class="bi bi-plus-lg"></i>
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
                 <span class="small">Add photos</span>
-                <input type="file" accept="image/*" multiple hidden @change="onPhotosSelected" @blur="touch('photos')" />
+                <input
+                  type="file" accept="image/*" multiple class="visually-hidden"
+                  aria-describedby="photos-label"
+                  :aria-invalid="!!showError('photos')"
+                  @change="onPhotosSelected" @blur="touch('photos')"
+                />
               </label>
             </div>
-            <p v-if="showError('photos')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.photos }}</p>
+            <p v-if="showError('photos')" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.photos }}</p>
           </div>
 
           <div class="col-12">
-            <label class="field-label">Listing type</label>
+            <p id="listing-type-label" class="field-label">Listing type</p>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-              <div class="btn-group" role="group">
+              <div class="btn-group" role="group" aria-labelledby="listing-type-label">
                 <input id="typeFree" v-model="form.listingType" type="radio" class="btn-check" value="free" />
                 <label class="btn btn-ghost btn-sm" for="typeFree">Free</label>
                 <input id="typeSale" v-model="form.listingType" type="radio" class="btn-check" value="sale" />
@@ -221,7 +258,7 @@ function publish() {
                 <div class="input-group input-group-sm">
                   <span class="input-group-text">$</span>
                   <input
-                    v-model="form.price" type="number" min="0" step="0.5" class="form-control"
+                    v-model="form.price" type="number" min="0" step="0.5" class="form-control" aria-label="Price in dollars"
                     :class="{ 'is-invalid': showError('price') }"
                     placeholder="0.00"
                     @blur="touch('price')"
@@ -229,12 +266,12 @@ function publish() {
                 </div>
               </div>
             </div>
-            <p v-if="showError('price')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.price }}</p>
+            <p v-if="showError('price')" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.price }}</p>
           </div>
         </div>
 
         <div class="d-flex justify-content-end mt-4">
-          <button class="btn btn-primary" @click="goToPickup">Next: Pickup & Publish</button>
+          <button type="button" class="btn btn-primary" @click="goToPickup">Next: Pickup & Publish</button>
         </div>
       </div>
 
@@ -242,7 +279,7 @@ function publish() {
       <div v-else key="pickup" class="crate-card p-4">
         <label class="field-label" for="pickupPoint">Pickup point</label>
         <div class="input-group mb-1">
-          <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+          <span class="input-group-text"><i class="bi bi-geo-alt" aria-hidden="true"></i></span>
           <input
             id="pickupPoint" v-model="form.pickupPoint" type="text" class="form-control"
             :class="{ 'is-invalid': showError('pickupPoint') }"
@@ -253,9 +290,10 @@ function publish() {
             Suggest public spot
           </button>
         </div>
-        <p v-if="showError('pickupPoint')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.pickupPoint }}</p>
+        <p v-if="showError('pickupPoint')" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.pickupPoint }}</p>
 
-        <label class="field-label mt-3">Availability</label>
+        <fieldset class="mt-3">
+        <legend class="field-label">Availability</legend>
         <div class="d-flex gap-4">
           <div class="form-check">
             <input id="weekdayEvenings" v-model="form.weekdayEvenings" class="form-check-input" type="checkbox" @change="touch('availability')" />
@@ -266,18 +304,21 @@ function publish() {
             <label class="form-check-label small" for="weekends">Weekends</label>
           </div>
         </div>
-        <p v-if="showError('availability')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.availability }}</p>
+        </fieldset>
+        <p v-if="showError('availability')" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.availability }}</p>
 
         <div class="d-flex justify-content-between mt-4 flex-wrap gap-2">
-          <button class="btn btn-ghost" @click="saveDraft">Save draft</button>
-          <button class="btn btn-primary" @click="publish">Post item</button>
+          <button type="button" class="btn btn-ghost" @click="saveDraft">Save draft</button>
+          <button type="button" class="btn btn-primary" :disabled="isPublishing" @click="publish">
+            {{ isPublishing ? 'Posting…' : 'Post item' }}
+          </button>
         </div>
       </div>
       </transition>
 
       <transition name="fade">
-        <div v-if="successMessage" class="eco-toast">
-          <i class="bi bi-check-circle"></i>{{ successMessage }}
+        <div v-if="successMessage" class="eco-toast" role="status">
+          <i class="bi bi-check-circle" aria-hidden="true"></i>{{ successMessage }}
         </div>
       </transition>
     </div>
@@ -324,5 +365,6 @@ function publish() {
   cursor: pointer;
   background: var(--bg-kraft);
 }
-.photo-add:hover { border-color: var(--primary); color: var(--primary); }
+.photo-add:hover, .photo-add:focus-within { border-color: var(--primary); color: var(--primary); }
+.photo-add:focus-within { outline: 2.5px solid var(--caution); outline-offset: 2px; }
 </style>

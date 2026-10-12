@@ -151,7 +151,7 @@ function publish() {
     <div class="container">
       <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
         <div>
-          <span class="market-tag market-tag--rotate-r mb-2 d-inline-flex"><i class="bi bi-shop"></i> Business</span>
+          <span class="market-tag market-tag--rotate-r mb-2 d-inline-flex"><i class="bi bi-shop" aria-hidden="true"></i> Business</span>
           <h1 class="h3 mb-0">Bulk upload dashboard</h1>
         </div>
       </div>
@@ -186,16 +186,20 @@ function publish() {
 
       <!-- Tabs -->
       <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-sm" :class="activeTab === 'csv' ? 'btn-primary' : 'btn-ghost'" @click="activeTab = 'csv'">CSV Import</button>
-        <button class="btn btn-sm" :class="activeTab === 'manual' ? 'btn-primary' : 'btn-ghost'" @click="activeTab = 'manual'">Manual Batch Entry</button>
+        <button type="button" class="btn btn-sm" :class="activeTab === 'csv' ? 'btn-primary' : 'btn-ghost'" :aria-pressed="activeTab === 'csv'" @click="activeTab = 'csv'">CSV Import</button>
+        <button type="button" class="btn btn-sm" :class="activeTab === 'manual' ? 'btn-primary' : 'btn-ghost'" :aria-pressed="activeTab === 'manual'" @click="activeTab = 'manual'">Manual Batch Entry</button>
       </div>
 
       <!-- CSV import -->
-      <div v-if="activeTab === 'csv'" class="dropzone mb-4" @dragover.prevent @drop="onDrop" @click="fileInputRef?.click()">
-        <i class="bi bi-upload fs-3 text-soft"></i>
-        <p class="mb-1 text-soft">Drag CSV file here, or click to browse</p>
-        <button class="btn btn-link p-0" type="button" @click.stop="downloadTemplate">Download template</button>
-        <input ref="fileInputRef" type="file" accept=".csv" hidden @change="handleFileChange" />
+      <!-- Drop zone: the visible "browse" button is a real button, so it
+           works by keyboard as well as by drag-and-drop (BR E.3). -->
+      <div v-if="activeTab === 'csv'" class="dropzone mb-4" @dragover.prevent @drop="onDrop">
+        <i class="bi bi-upload fs-3 text-soft" aria-hidden="true"></i>
+        <p class="mb-2 text-soft">Drag a CSV file here, or</p>
+        <button type="button" class="btn btn-primary btn-sm mb-2" @click="fileInputRef?.click()">Choose CSV file</button>
+        <br />
+        <button class="btn btn-link p-0" type="button" @click="downloadTemplate">Download template</button>
+        <input ref="fileInputRef" type="file" accept=".csv" class="visually-hidden" tabindex="-1" aria-hidden="true" @change="handleFileChange" />
       </div>
 
       <!-- Manual batch entry -->
@@ -203,7 +207,7 @@ function publish() {
         <div class="row g-2 align-items-start">
           <div class="col-12 col-md-5">
             <input
-              v-model="manualRow.item" type="text" class="form-control form-control-sm"
+              v-model="manualRow.item" type="text" class="form-control form-control-sm" aria-label="Item name"
               :class="{ 'is-invalid': manualTouched.item && manualErrors.item }"
               placeholder="Item name"
             />
@@ -211,7 +215,7 @@ function publish() {
           </div>
           <div class="col-6 col-md-2">
             <input
-              v-model="manualRow.qty" type="number" min="1" class="form-control form-control-sm"
+              v-model="manualRow.qty" type="number" min="1" class="form-control form-control-sm" aria-label="Quantity"
               :class="{ 'is-invalid': manualTouched.qty && manualErrors.qty }"
               placeholder="Qty"
             />
@@ -219,7 +223,7 @@ function publish() {
           </div>
           <div class="col-6 col-md-3">
             <select
-              v-model="manualRow.category" class="form-select form-select-sm"
+              v-model="manualRow.category" class="form-select form-select-sm" aria-label="Category"
               :class="{ 'is-invalid': manualTouched.category && manualErrors.category }"
             >
               <option value="" disabled>Category</option>
@@ -228,7 +232,7 @@ function publish() {
             <p v-if="manualTouched.category && manualErrors.category" class="field-error">{{ manualErrors.category }}</p>
           </div>
           <div class="col-12 col-md-2 d-grid">
-            <button class="btn btn-primary btn-sm" @click="addManualRow">Add row</button>
+            <button type="button" class="btn btn-primary btn-sm" @click="addManualRow">Add row</button>
           </div>
         </div>
       </div>
@@ -236,30 +240,31 @@ function publish() {
       <!-- Preview table -->
       <div v-if="rows.length" class="table-responsive crate-card p-3 mb-3">
         <table class="table align-middle mb-0">
+          <caption class="visually-hidden">Items ready to publish</caption>
           <thead>
             <tr class="small text-faint">
-              <th></th>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Category</th>
-              <th>Status</th>
-              <th></th>
+              <th scope="col"><span class="visually-hidden">Include</span></th>
+              <th scope="col">Item</th>
+              <th scope="col">Qty</th>
+              <th scope="col">Category</th>
+              <th scope="col">Status</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(row, i) in rows" :key="i">
-              <td><input v-model="row.checked" type="checkbox" class="form-check-input" :disabled="!!row.error" /></td>
+              <td><input v-model="row.checked" type="checkbox" class="form-check-input" :disabled="!!row.error" :aria-label="`Include ${row.item}`" /></td>
               <td>{{ row.item }}</td>
               <td>{{ row.qty }}</td>
               <td>{{ row.category }}</td>
               <td>
                 <span :class="row.error ? 'text-danger' : 'text-success'" class="small">
-                  <i :class="['bi', row.error ? 'bi-exclamation-triangle' : 'bi-check-circle']"></i>
+                  <i :class="['bi', row.error ? 'bi-exclamation-triangle' : 'bi-check-circle']" aria-hidden="true"></i>
                   {{ row.error || 'Ready' }}
                 </span>
               </td>
               <td class="text-end">
-                <button class="btn btn-sm btn-ghost" @click="removeRow(i)"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn btn-sm btn-ghost" :aria-label="`Remove ${row.item}`" @click="removeRow(i)"><i class="bi bi-trash" aria-hidden="true"></i></button>
               </td>
             </tr>
           </tbody>
@@ -270,20 +275,20 @@ function publish() {
         <div class="form-check d-flex align-items-center gap-2">
           <input id="saveTemplate" v-model="saveAsTemplate" class="form-check-input mt-0" type="checkbox" />
           <label class="form-check-label small" for="saveTemplate">Save as recurring template — Frequency:</label>
-          <select v-model="frequency" class="form-select form-select-sm w-auto">
+          <select v-model="frequency" class="form-select form-select-sm w-auto" aria-label="Template frequency">
             <option>Weekly</option>
             <option>Fortnightly</option>
             <option>Monthly</option>
           </select>
         </div>
-        <button class="btn btn-primary" :disabled="readyRows.length === 0" @click="publish">
+        <button type="button" class="btn btn-primary" :disabled="readyRows.length === 0" @click="publish">
           Publish {{ readyRows.length }} listing{{ readyRows.length === 1 ? '' : 's' }}
         </button>
       </div>
 
       <transition name="fade">
-        <div v-if="toastMessage" class="eco-toast">
-          <i class="bi bi-check-circle"></i>{{ toastMessage }}
+        <div v-if="toastMessage" class="eco-toast" role="status">
+          <i class="bi bi-check-circle" aria-hidden="true"></i>{{ toastMessage }}
         </div>
       </transition>
     </div>
@@ -297,7 +302,6 @@ function publish() {
   background: var(--bg-kraft);
   padding: 2.5rem 1rem;
   text-align: center;
-  cursor: pointer;
 }
 .dropzone:hover { border-color: var(--primary); }
 </style>

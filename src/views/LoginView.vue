@@ -6,7 +6,7 @@ import { required, minLength, isEmail, runValidators } from '../utils/validators
 
 const router = useRouter()
 const route = useRoute()
-const { login } = useAuth()
+const { login, loginWithGoogle } = useAuth()
 
 const form = reactive({ email: '', password: '' })
 const touched = reactive({})
@@ -20,6 +20,11 @@ const errors = computed(() => ({
 }))
 const showError = (f) => (submitted.value || touched[f]) && errors.value[f]
 
+function goAfterLogin(user) {
+  const redirect = route.query.redirect
+  router.push(redirect || (user.role === 'admin' ? '/admin' : user.role === 'business' ? '/business' : '/browse'))
+}
+
 async function onSubmit() {
   submitted.value = true
   serverError.value = ''
@@ -27,9 +32,7 @@ async function onSubmit() {
 
   isSubmitting.value = true
   try {
-    const user = await login({ email: form.email, password: form.password })
-    const redirect = route.query.redirect
-    router.push(redirect || (user.role === 'admin' ? '/admin' : user.role === 'business' ? '/business' : '/browse'))
+    goAfterLogin(await login({ email: form.email, password: form.password }))
   } catch (err) {
     serverError.value = err.message || 'Something went wrong, please try again.'
   } finally {
@@ -37,9 +40,16 @@ async function onSubmit() {
   }
 }
 
-function fillDemoAdmin() {
-  form.email = 'admin@ecoloop.com'
-  form.password = 'admin123'
+async function onGoogle() {
+  serverError.value = ''
+  isSubmitting.value = true
+  try {
+    goAfterLogin(await loginWithGoogle())
+  } catch (err) {
+    serverError.value = err.message
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -47,45 +57,49 @@ function fillDemoAdmin() {
   <div class="section-pad">
     <div class="container" style="max-width: 420px;">
       <div class="eyebrow mb-1 text-center">Welcome back</div>
-      <h1 class="h3 mb-4 text-center">Log in to EcoLoop</h1>
+      <h1 id="login-heading" class="h3 mb-4 text-center">Log in to EcoLoop</h1>
 
-      <form class="crate-card p-4" @submit.prevent="onSubmit">
+      <form class="crate-card p-4" novalidate aria-labelledby="login-heading" @submit.prevent="onSubmit">
         <div v-if="serverError" class="alert alert-danger py-2 small" role="alert">
-          <i class="bi bi-exclamation-triangle me-1"></i>{{ serverError }}
+          <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ serverError }}
         </div>
 
         <label class="field-label" for="email">Email</label>
         <input
           id="email" v-model="form.email" type="email" class="form-control mb-1"
+          autocomplete="email" required
+          :aria-invalid="!!showError('email')"
+          :aria-describedby="showError('email') ? 'email-error' : undefined"
           :class="{ 'is-invalid': showError('email') }"
           placeholder="you@example.com"
           @blur="touched.email = true"
         />
-        <p v-if="showError('email')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.email }}</p>
+        <p v-if="showError('email')" id="email-error" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.email }}</p>
 
         <label class="field-label mt-3" for="password">Password</label>
         <input
           id="password" v-model="form.password" type="password" class="form-control mb-1"
+          autocomplete="current-password" required
+          :aria-invalid="!!showError('password')"
+          :aria-describedby="showError('password') ? 'password-error' : undefined"
           :class="{ 'is-invalid': showError('password') }"
           placeholder="••••••••"
           @blur="touched.password = true"
         />
-        <p v-if="showError('password')" class="field-error"><i class="bi bi-exclamation-circle"></i>{{ errors.password }}</p>
+        <p v-if="showError('password')" id="password-error" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.password }}</p>
 
         <button type="submit" class="btn btn-primary w-100 mt-3" :disabled="isSubmitting">
           {{ isSubmitting ? 'Logging in…' : 'Log in' }}
+        </button>
+        <div class="divider-or my-3" aria-hidden="true"><span>or</span></div>
+        <button type="button" class="btn btn-ghost w-100" :disabled="isSubmitting" @click="onGoogle">
+          <i class="bi bi-google me-1" aria-hidden="true"></i>Continue with Google
         </button>
         <p class="text-faint small text-center mt-3 mb-0">
           No account yet? <router-link to="/signup">Sign up</router-link>
         </p>
       </form>
 
-      <p class="text-faint small text-center mt-3">
-        Demo admin account for testing —
-        <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="fillDemoAdmin">
-          click to fill it in
-        </button>
-      </p>
     </div>
   </div>
 </template>

@@ -11,9 +11,9 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
     <!-- Hero -->
     <section class="hero section-pad">
       <div class="container">
-        <div class="row align-items-center g-5">
+        <div class="row align-items-center g-4 g-lg-5">
           <div class="col-12 col-lg-6">
-            <span class="market-tag mb-3"><i class="bi bi-geo-alt"></i> Melbourne, VIC</span>
+            <span class="market-tag mb-3"><i class="bi bi-geo-alt" aria-hidden="true"></i> Melbourne, VIC</span>
             <h1 class="display-1-custom mb-3">
               Your spare shelf is<br />someone else's fix.
             </h1>
@@ -51,7 +51,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
               <div class="mission-thumb rounded mb-3">
                 <img :src="missionQuote" alt="GreenLoop Collective: make what's useless useful again" />
               </div>
-              <h3 class="h6 mb-1">GreenLoop Collective</h3>
+              <h2 class="h6 mb-1">GreenLoop Collective</h2>
               <p class="text-soft small mb-0">Melbourne, VIC · the team behind EcoLoop</p>
             </div>
           </div>
@@ -67,7 +67,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
         <div class="row g-4">
           <div class="col-12 col-md-4">
             <div class="crate-card p-4 h-100">
-              <i class="bi bi-house-heart fs-3" style="color: var(--signal);"></i>
+              <i class="bi bi-house-heart fs-3" style="color: var(--signal);" aria-hidden="true"></i>
               <h3 class="h6 mt-3">For time-poor givers</h3>
               <p class="text-soft small mb-0">
                 List an outgrown item in under two minutes, set it free or for a
@@ -77,7 +77,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
           </div>
           <div class="col-12 col-md-4">
             <div class="crate-card p-4 h-100">
-              <i class="bi bi-search fs-3" style="color: var(--caution);"></i>
+              <i class="bi bi-search fs-3" style="color: var(--caution);" aria-hidden="true"></i>
               <h3 class="h6 mt-3">For budget-conscious finders</h3>
               <p class="text-soft small mb-0">
                 Filter by distance and category, get notified when something
@@ -87,7 +87,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
           </div>
           <div class="col-12 col-md-4">
             <div class="crate-card p-4 h-100">
-              <i class="bi bi-shop fs-3" style="color: var(--ink-soft);"></i>
+              <i class="bi bi-shop fs-3" style="color: var(--ink-soft);" aria-hidden="true"></i>
               <h3 class="h6 mt-3">For local businesses</h3>
               <p class="text-soft small mb-0">
                 Bulk-upload weekly surplus with a CSV, save it as a recurring
@@ -123,7 +123,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
     <!-- About -->
     <section id="about" class="section-pad kraft-panel">
       <div class="container">
-        <div class="row g-5 align-items-center">
+        <div class="row g-4 g-lg-5 align-items-center">
           <div class="col-12 col-lg-7">
             <p class="eyebrow mb-2">About EcoLoop</p>
             <h2 class="h3 mb-3">Built by GreenLoop Collective for one Melbourne neighbourhood at a time.</h2>
@@ -139,11 +139,11 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
             <div class="crate-card p-4">
               <p class="eyebrow mb-2">Our five commitments</p>
               <ul class="list-unstyled small text-soft d-flex flex-column gap-2 mb-0">
-                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>Free listings stay free, always</li>
-                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>ID checks and ratings for safer pickups</li>
-                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>Visible impact — kg diverted, items reused</li>
-                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>A separate, efficient tool for business surplus</li>
-                <li><i class="bi bi-check2 me-2" style="color: var(--signal);"></i>Community guidelines that are actually enforced</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);" aria-hidden="true"></i>Free listings stay free, always</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);" aria-hidden="true"></i>ID checks and ratings for safer pickups</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);" aria-hidden="true"></i>Visible impact — kg diverted, items reused</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);" aria-hidden="true"></i>A separate, efficient tool for business surplus</li>
+                <li><i class="bi bi-check2 me-2" style="color: var(--signal);" aria-hidden="true"></i>Community guidelines that are actually enforced</li>
               </ul>
             </div>
           </div>
@@ -187,7 +187,7 @@ const { totalItems, totalKgDiverted, businessListings } = useListings()
 .step-number {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--caution);
+  color: var(--caution-text);
   font-size: 1.1rem;
 }
 </style>

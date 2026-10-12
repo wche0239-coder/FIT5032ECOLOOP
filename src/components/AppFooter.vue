@@ -7,7 +7,7 @@ const year = new Date().getFullYear()
     <div class="container py-5">
       <div class="row g-4">
         <div class="col-12 col-lg-4">
-          <div class="brand-mark mb-2"><i class="bi bi-arrow-repeat"></i> EcoLoop</div>
+          <div class="brand-mark mb-2"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> EcoLoop</div>
           <p class="text-soft small mb-0" style="max-width: 32ch">
             A local exchange for Melbourne residents and small businesses —
             built by GreenLoop Collective to keep good things out of landfill.
@@ -38,9 +38,9 @@ const year = new Date().getFullYear()
         <div class="col-6 col-lg-2">
           <div class="eyebrow mb-2">Follow</div>
           <div class="d-flex gap-3 fs-5 text-soft">
-            <i class="bi bi-facebook"></i>
-            <i class="bi bi-instagram"></i>
-            <i class="bi bi-linkedin"></i>
+            <i class="bi bi-facebook" aria-hidden="true"></i>
+            <i class="bi bi-instagram" aria-hidden="true"></i>
+            <i class="bi bi-linkedin" aria-hidden="true"></i>
           </div>
         </div>
       </div>

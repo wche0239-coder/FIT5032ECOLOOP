@@ -53,7 +53,7 @@ const sellerCount = computed(() => getSellerRatingsFor(props.listing.ownerName).
       <div class="d-flex flex-wrap gap-1 mb-2">
         <span class="meta-chip">{{ category.label }}</span>
         <span class="meta-chip">{{ listing.condition }}</span>
-        <span class="meta-chip"><i class="bi bi-geo-alt"></i> {{ listing.distanceKm }} km</span>
+        <span class="meta-chip"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ listing.distanceKm }} km<span class="visually-hidden"> away</span></span>
       </div>
 
       <button
@@ -62,7 +62,7 @@ const sellerCount = computed(() => getSellerRatingsFor(props.listing.ownerName).
         @click="emit('rate', { type: 'listing', id: listing.id, label: listing.title })"
       >
         <StarRating :average="listingAvg" :count="listingCount" readonly size="0.8rem" />
-        <span class="text-faint small ms-1">rate item</span>
+        <span class="text-faint small ms-1">rate item<span class="visually-hidden">: {{ listing.title }}</span></span>
       </button>
 
       <p class="text-soft small flex-grow-1 mb-2">{{ listing.description }}</p>
@@ -75,7 +75,7 @@ const sellerCount = computed(() => getSellerRatingsFor(props.listing.ownerName).
           @click="emit('rate', { type: 'seller', id: listing.ownerName, label: listing.ownerName })"
         >
           <StarRating :average="sellerAvg" :count="sellerCount" readonly size="0.8rem" />
-          <span class="ms-1">rate seller</span>
+          <span class="ms-1">rate seller<span class="visually-hidden">: {{ listing.ownerName }}</span></span>
         </button>
       </div>
 
@@ -83,8 +83,8 @@ const sellerCount = computed(() => getSellerRatingsFor(props.listing.ownerName).
         <MarketTag :variant="listing.isFree ? 'free' : 'price'">
           {{ listing.isFree ? 'FREE' : `$${listing.price}` }}
         </MarketTag>
-        <button class="btn btn-sm btn-primary" @click="emit('request', listing)">
-          Request
+        <button type="button" class="btn btn-sm btn-primary" @click="emit('request', listing)">
+          Request<span class="visually-hidden"> {{ listing.title }}</span>
         </button>
       </div>
     </div>

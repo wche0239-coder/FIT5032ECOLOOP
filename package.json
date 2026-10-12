@@ -6,16 +6,26 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "vite build && firebase deploy",
+    "deploy:hosting": "vite build && firebase deploy --only hosting",
+    "mock:exchanges": "node scripts/generate-mock-exchanges.mjs"
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "firebase": "^13.0.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "mapbox-gl": "^3.32.0",
     "vue": "^3.5.41",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
     "vite": "^5.4.21"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
   }
 }
