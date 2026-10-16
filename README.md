@@ -32,8 +32,9 @@ The app talks to three outside services. Each needs a one-time setup.
    firebase login
    firebase use --add          # pick your project; this updates .firebaserc
    ```
-6. **Make yourself an admin:** sign up in the app, then in the Firebase console open
-   Firestore → `users` → your document and change `role` to `admin`.
+6. **Make the first admin:** sign up in the app, then in the Firebase console open
+   Firestore → `users` → your document and change `role` to `admin`. This is only
+   needed once; after that, admins change other users' roles from the Admin page.
    (Security rules stop anyone from giving themselves admin through the app.)
 
 ### 2. Mapbox (map, place search, directions)
@@ -72,7 +73,8 @@ The site is served at `https://<your-project-id>.web.app`.
 | `/post-item` | Wireframe 2 — two-step "Post an item" form (requires login) |
 | `/business` | Wireframe 3 — business bulk-upload dashboard (requires `business` or `admin` role) |
 | `/reports` | Data & reports — two interactive tables, CSV/PDF export, email PDF (requires login) |
-| `/admin` | Admin overview: account counts by role, read from Firestore (requires `admin` role) |
+| `/admin` | Admin: account counts, and a user table where admins change roles (requires `admin` role) |
+| `/forgot-password` | Request a password reset email |
 | `/login`, `/signup` | Authentication |
 
 **Testing role-based access:** sign up as an Individual or Business from `/signup`.
@@ -174,6 +176,16 @@ role are kept in Firestore at `users/{uid}`; the router guard waits for
 Firebase to restore the session before checking access, so a page refresh
 doesn't bounce logged-in users to the login page.
 
+**Password reset:** "Forgot password?" on the login page opens
+`/forgot-password`, which uses Firebase's `sendPasswordResetEmail`. Firebase
+emails a single-use link, so the app never handles the new password. The
+page shows the same confirmation whether or not the email has an account,
+so it can't be used to find out who is registered (email enumeration).
+
+**Robust sign-in:** emails are normalised to the form Firebase stores, and a
+failure to load a profile after a successful sign-in no longer shows an
+error; the person is signed in and the profile is recreated if missing.
+
 **BR (D.2) — Email with attachment (SendGrid)**
 On `/reports`, **Email PDF** builds a PDF of the table's current rows in the
 browser and calls the `sendReportEmail` Cloud Function, which sends it as an
@@ -201,11 +213,24 @@ Functions and Firestore rules, with one command: `npm run deploy`.
 Live URL: https://fit5032-89bf5.web.app
 
 **BR (E.1) — Cloud Functions**
-`functions/index.js` defines `sendReportEmail`, a callable Firebase Cloud
-Function (2nd gen, region `australia-southeast1`). It rejects callers who
-aren't logged in, validates its input server-side, reads the SendGrid key
-from Secret Manager, sends the email and logs the result. Input validation
-has unit tests: `cd functions && npm test`.
+`functions/index.js` defines two callable Firebase Cloud Functions (2nd gen,
+region `australia-southeast1`), each doing work that must not happen in the
+browser:
+
+1. `sendReportEmail`: emails a PDF via SendGrid (see D.2). The API key lives
+   in Secret Manager and never reaches the browser.
+2. `setUserRole`: lets an admin change another user's role from the Admin
+   page. The function looks up the *caller's* role on the server with the
+   Admin SDK (a role sent from the browser is never trusted), validates the
+   new role and user id, stops admins changing their own role (so the site
+   can't be locked out of admin), and records who made the change and when.
+   `firestore.rules` blocks role changes from the browser, so this audited
+   function is the only way to change a role.
+
+Both functions reject signed-out callers, validate all input on the server,
+cap instances to limit cost, and log outcomes. Business rules are kept in
+plain modules (`validate.js`, `roles.js`) with unit tests:
+`cd functions && npm test` (12 tests).
 
 **BR (E.2) — Geo location (Mapbox)**
 `/browse` → **Map view** (`src/components/ListingMap.vue`) shows every

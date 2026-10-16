@@ -30,6 +30,7 @@ const routes = [
     meta: { requiresAuth: true, title: 'Data & reports' },
   },
   { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { title: 'Log in' } },
+  { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue'), meta: { title: 'Reset password' } },
   { path: '/signup', name: 'signup', component: () => import('../views/SignupView.vue'), meta: { title: 'Sign up' } },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue'), meta: { title: 'Page not found' } },
 ]

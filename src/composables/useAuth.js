@@ -7,6 +7,7 @@ import {
   GoogleAuthProvider,
   updateProfile,
   signOut,
+  sendPasswordResetEmail,
 } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../firebase'
@@ -35,12 +36,22 @@ const authReady = ref(false)
 let resolveReady
 const readyPromise = new Promise((resolve) => (resolveReady = resolve))
 
+// Firebase stores emails in lower case, and firestore.rules checks the
+// profile's email against the signed-in account's email. Always use the
+// email Firebase returns (not what was typed) so "Kyle@Gmail.com" and
+// "kyle@gmail.com" are treated as the same account.
+function profileName(fbUser, typedName) {
+  const name = (typedName || fbUser.displayName || fbUser.email.split('@')[0] || '').trim()
+  return name.length >= 2 ? name.slice(0, 80) : 'EcoLoop member'
+}
+
 async function loadProfile(fbUser) {
   const snap = await getDoc(doc(db, 'users', fbUser.uid))
   if (snap.exists()) return snap.data()
-  // First Google sign-in: no profile yet, create a default one.
+  // First Google sign-in (or an earlier profile write that failed):
+  // create a default profile now.
   const profile = {
-    name: fbUser.displayName || fbUser.email.split('@')[0],
+    name: profileName(fbUser),
     email: fbUser.email,
     role: 'individual',
     createdAt: serverTimestamp(),
@@ -85,6 +96,9 @@ function friendlyError(err) {
     'auth/weak-password': 'Password must be at least 6 characters.',
     'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
     'auth/network-request-failed': 'Network error — check your connection and try again.',
+    'auth/invalid-email': 'Enter a valid email address.',
+    'auth/missing-email': 'Enter your email address.',
+    'auth/unauthorized-continue-uri': 'Password reset is not set up for this web address yet.',
   }
   return new Error(map[err?.code] || err?.message || 'Something went wrong, please try again.')
 }
@@ -94,39 +108,80 @@ export function useAuth() {
   const role = computed(() => currentUser.value?.role ?? null)
 
   async function register({ name, email, password, role: chosenRole }) {
+    let user
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password)
-      await updateProfile(user, { displayName: name })
-      const profile = {
-        name,
-        email,
-        role: SELF_SERVICE_ROLES.includes(chosenRole) ? chosenRole : 'individual',
-        createdAt: serverTimestamp(),
-      }
-      await setDoc(doc(db, 'users', user.uid), profile)
-      currentUser.value = toSessionUser(user, profile)
-      return currentUser.value
+      ;({ user } = await createUserWithEmailAndPassword(auth, email.trim(), password))
     } catch (err) {
       throw friendlyError(err)
     }
+    // From here the account exists. A problem saving the profile must not
+    // look like a failed sign-up, so it's logged and the user carries on.
+    const profile = {
+      name: profileName(user, name),
+      email: user.email,
+      role: SELF_SERVICE_ROLES.includes(chosenRole) ? chosenRole : 'individual',
+      createdAt: serverTimestamp(),
+    }
+    try {
+      await updateProfile(user, { displayName: profile.name })
+      await setDoc(doc(db, 'users', user.uid), profile)
+    } catch (err) {
+      console.error('[useAuth] Account created but profile could not be saved', err)
+    }
+    currentUser.value = toSessionUser(user, profile)
+    return currentUser.value
+  }
+
+  // Signs in, then loads the profile. If only the profile load fails, the
+  // person is still signed in (with the default role) instead of being
+  // shown an error while the navbar says they're logged in.
+  async function finishSignIn(user) {
+    let profile = null
+    try {
+      profile = await loadProfile(user)
+    } catch (err) {
+      console.error('[useAuth] Signed in, but the profile could not be loaded', err)
+    }
+    currentUser.value = toSessionUser(user, profile)
+    return currentUser.value
   }
 
   async function login({ email, password }) {
+    let user
     try {
-      const { user } = await signInWithEmailAndPassword(auth, email, password)
-      currentUser.value = toSessionUser(user, await loadProfile(user))
-      return currentUser.value
+      ;({ user } = await signInWithEmailAndPassword(auth, email.trim(), password))
     } catch (err) {
       throw friendlyError(err)
     }
+    return finishSignIn(user)
   }
 
   async function loginWithGoogle() {
+    let user
     try {
-      const { user } = await signInWithPopup(auth, new GoogleAuthProvider())
-      currentUser.value = toSessionUser(user, await loadProfile(user))
-      return currentUser.value
+      ;({ user } = await signInWithPopup(auth, new GoogleAuthProvider()))
     } catch (err) {
+      throw friendlyError(err)
+    }
+    return finishSignIn(user)
+  }
+
+  /**
+   * Sends Firebase's password-reset email. The link brings the person
+   * back to our login page afterwards.
+   *
+   * Firebase's email-enumeration protection means this succeeds whether
+   * or not an account exists, so the UI must show the same message
+   * either way (it never reveals who has an account).
+   */
+  async function resetPassword(email) {
+    try {
+      await sendPasswordResetEmail(auth, email.trim(), {
+        url: `${window.location.origin}${window.location.pathname}#/login`,
+      })
+    } catch (err) {
+      // An unknown email is not an error worth showing (see above).
+      if (err?.code === 'auth/user-not-found') return
       throw friendlyError(err)
     }
   }
@@ -149,6 +204,7 @@ export function useAuth() {
     register,
     login,
     loginWithGoogle,
+    resetPassword,
     logout,
     getIdToken,
   }

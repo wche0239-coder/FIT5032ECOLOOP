@@ -76,9 +76,15 @@ async function onGoogle() {
         />
         <p v-if="showError('email')" id="email-error" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.email }}</p>
 
-        <label class="field-label mt-3" for="password">Password</label>
+        <div class="d-flex justify-content-between align-items-baseline mt-3">
+          <label class="field-label mb-0" for="password">Password</label>
+          <router-link
+            class="small"
+            :to="{ path: '/forgot-password', query: form.email ? { email: form.email } : {} }"
+          >Forgot password?</router-link>
+        </div>
         <input
-          id="password" v-model="form.password" type="password" class="form-control mb-1"
+          id="password" v-model="form.password" type="password" class="form-control mb-1 mt-1"
           autocomplete="current-password" required
           :aria-invalid="!!showError('password')"
           :aria-describedby="showError('password') ? 'password-error' : undefined"

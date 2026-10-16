@@ -8,6 +8,11 @@
 // ship to every visitor's browser. Here it is stored in Google Secret
 // Manager and only this function can read it.
 //
+// setUserRole (BR E.1 / C.2): lets an admin change another user's role
+// from the Admin page. The caller's admin status is checked here on the
+// server with the Admin SDK, and firestore.rules stops anyone changing a
+// role directly from the browser, so this function is the only way in.
+//
 // One-time setup (see README):
 //   firebase functions:secrets:set SENDGRID_API_KEY
 //   and set SENDGRID_FROM in functions/.env to your verified sender
@@ -15,7 +20,12 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https')
 const { defineSecret, defineString } = require('firebase-functions/params')
 const logger = require('firebase-functions/logger')
 const sgMail = require('@sendgrid/mail')
+const { initializeApp } = require('firebase-admin/app')
+const { getFirestore, FieldValue } = require('firebase-admin/firestore')
 const { validateEmailRequest, escapeHtml } = require('./validate')
+const { applyRoleChange, RoleChangeError } = require('./roles')
+
+initializeApp()
 
 const SENDGRID_API_KEY = defineSecret('SENDGRID_API_KEY')
 // Must be a Single Sender or domain you have verified in SendGrid.
@@ -67,5 +77,42 @@ exports.sendReportEmail = onCall(
 
     logger.info('Report emailed', { uid: request.auth.uid, to, filename })
     return { ok: true, sentTo: to }
+  }
+)
+
+exports.setUserRole = onCall(
+  {
+    region: 'australia-southeast1',
+    maxInstances: 5,
+    timeoutSeconds: 15,
+  },
+  async (request) => {
+    const db = getFirestore()
+    const store = {
+      async getUser(uid) {
+        const snap = await db.collection('users').doc(uid).get()
+        return snap.exists ? snap.data() : null
+      },
+      async setRole(uid, role, byUid) {
+        await db.collection('users').doc(uid).update({
+          role,
+          roleUpdatedAt: FieldValue.serverTimestamp(),
+          roleUpdatedBy: byUid,
+        })
+      },
+    }
+
+    try {
+      const result = await applyRoleChange(
+        { callerUid: request.auth?.uid ?? null, targetUid: request.data?.uid, role: request.data?.role },
+        store
+      )
+      logger.info('Role changed', { by: request.auth.uid, ...result })
+      return result
+    } catch (err) {
+      if (err instanceof RoleChangeError) throw new HttpsError(err.code, err.message)
+      logger.error('setUserRole failed', err)
+      throw new HttpsError('internal', 'Could not change the role. Please try again.')
+    }
   }
 )

@@ -29,10 +29,11 @@ service cloud.firestore {
         && request.resource.data.name.size() <= 80
         && request.resource.data.email == request.auth.token.email;
 
-      // Users may update their own name but never their own role.
-      allow update: if (isSignedIn() && request.auth.uid == uid
-                        && request.resource.data.role == resource.data.role)
-                    || isAdmin();
+      // Users may update their own profile but never its role. Roles are
+      // changed only by the setUserRole Cloud Function (Admin SDK), which
+      // checks the caller is an admin and records who made the change.
+      allow update: if isSignedIn() && request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role;
 
       allow delete: if isAdmin();
     }
