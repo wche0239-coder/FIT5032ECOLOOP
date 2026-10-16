@@ -198,7 +198,7 @@ logic is in `src/utils/tableEngine.js`, separate from the UI.
 **BR (D.4) — Deployment to the cloud**
 Deployed on **Firebase Hosting** (`firebase.json`), alongside the Cloud
 Functions and Firestore rules, with one command: `npm run deploy`.
-Live URL: `https://<your-project-id>.web.app` *(fill in after deploying)*.
+Live URL: https://fit5032-89bf5.web.app
 
 **BR (E.1) — Cloud Functions**
 `functions/index.js` defines `sendReportEmail`, a callable Firebase Cloud
