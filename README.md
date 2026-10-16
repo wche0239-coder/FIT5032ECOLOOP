@@ -229,8 +229,8 @@ browser:
 
 Both functions reject signed-out callers, validate all input on the server,
 cap instances to limit cost, and log outcomes. Business rules are kept in
-plain modules (`validate.js`, `roles.js`) with unit tests:
-`cd functions && npm test` (12 tests).
+plain modules (`validate.js`, `roles.js`, `bulk.js`) with unit tests:
+`cd functions && npm test` (17 tests).
 
 **BR (E.2) — Geo location (Mapbox)**
 `/browse` → **Map view** (`src/components/ListingMap.vue`) shows every
@@ -346,6 +346,39 @@ Three offline features keep it usable:
    connection or closed tab never loses a half-written listing. Posting
    itself also works offline (the pickup location falls back to the suburb
    centre when the map service can't be reached).
+
+### F.1 (4) Accessibility themes and display settings
+An **Accessibility** button in the navbar (visible on phones without opening
+the menu) opens a settings dialog (`AccessibilityPanel.vue`,
+`src/composables/useA11yPrefs.js`). Every theme meets WCAG 2.1 AA; the
+settings let each person go further for their own needs:
+
+| Setting | What it does |
+| --- | --- |
+| Colour theme | **Soft mint** (default), **Classic green** (the original design), **High contrast** (black on white, 2px borders, underlined blue links, black-and-amber focus ring), **Colour-blind safe** (red/green meanings replaced with Okabe-Ito blue/orange) |
+| Text size | Standard, Large (112.5%), Extra large (125%); the whole layout scales with it |
+| Easy-to-read font | Atkinson Hyperlegible, designed for low vision (loaded only when chosen) |
+| Highlight links | Underlines and shades every link, so links never rely on colour |
+| Reduce motion | Turns off animation and smooth scrolling |
+| Read aloud | Reads the current page with the browser's built-in voice |
+
+How it works:
+
+- Themes are sets of CSS custom properties on `<html data-theme="…">` in
+  `src/style.css`. Components read only these tokens, so every page follows.
+- The admin charts and the map's route line follow the theme too. In High
+  contrast the status chart uses texture (solid, hatched, outlined) as well
+  as colour; in Colour-blind safe it uses blue, orange and purple.
+- The defaults follow the device: `prefers-contrast: more` starts in High
+  contrast and `prefers-reduced-motion` turns on Reduce motion.
+- Settings are saved on the device (localStorage, wrapped in try/catch), and
+  a small script in `index.html` applies them before the page draws, so it
+  never flashes in the wrong theme.
+- Every control is a native radio button, switch or button with a label;
+  changes are announced to screen readers.
+
+Checked with axe-core: 0 WCAG 2.1 A/AA violations on every page in all four
+themes, and no horizontal scrolling at 390px wide with Extra large text.
 
 ## Notes for markers
 

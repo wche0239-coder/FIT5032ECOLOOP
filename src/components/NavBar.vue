@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import AccessibilityPanel from './AccessibilityPanel.vue'
 
 const { currentUser, isLoggedIn, role, logout } = useAuth()
 const router = useRouter()
@@ -17,6 +18,11 @@ async function handleLogout() {
       <RouterLink class="brand-mark navbar-brand" to="/" aria-label="EcoLoop home">
         <i class="bi bi-arrow-repeat" aria-hidden="true"></i> EcoLoop
       </RouterLink>
+
+      <!-- Outside the collapsed menu, so it's one tap away on phones too -->
+      <div class="ms-auto me-2 order-lg-last ms-lg-3 me-lg-0">
+        <AccessibilityPanel />
+      </div>
 
       <button
         class="navbar-toggler"

@@ -17,6 +17,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { MAPBOX_TOKEN, hasMapbox, searchPlaces, getRoute } from '../utils/mapboxApi'
 import { MELBOURNE_CBD, listingCoords, distanceKm } from '../data/suburbs'
 import { getCategory } from '../data/categories'
+import { currentTheme } from '../composables/useA11yPrefs'
 const { isOnline } = useOnline()
 
 const props = defineProps({
@@ -77,7 +78,7 @@ onMounted(() => {
       type: 'line',
       source: 'route',
       layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': '#1F5C4D', 'line-width': 5, 'line-opacity': 0.85 },
+      paint: { 'line-color': routeColor(), 'line-width': 5, 'line-opacity': 0.85 },
     })
     drawListingMarkers()
   })
@@ -103,6 +104,15 @@ function drawListingMarkers() {
     return new mapboxgl.Marker({ element: el }).setLngLat(coords).addTo(map)
   })
 }
+
+// The route line follows the chosen colour theme (F.1 accessibility themes).
+function routeColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--signal').trim() || '#1F5C4D'
+}
+watch(currentTheme, async () => {
+  await nextTick()
+  if (map?.getLayer('route-line')) map.setPaintProperty('route-line', 'line-color', routeColor())
+})
 
 watch(() => props.listings, drawListingMarkers)
 watch(selectedId, drawListingMarkers)
@@ -392,13 +402,13 @@ fieldset { border: 0; padding: 0; margin: 0; }
   padding: 0;
 }
 .map-pin:hover { transform: scale(1.12); }
-.map-pin.is-selected { outline: 3px solid #C4501F; outline-offset: 2px; transform: scale(1.2); z-index: 2; }
-.map-pin:focus-visible { outline: 3px solid #C4501F; outline-offset: 2px; }
+.map-pin.is-selected { outline: 3px solid var(--focus, #C4501F); outline-offset: 2px; transform: scale(1.2); z-index: 2; }
+.map-pin:focus-visible { outline: 3px solid var(--focus, #C4501F); outline-offset: 2px; }
 .origin-pin {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #17211C;
+  background: var(--ink, #17211C);
   color: #fff;
   display: flex;
   align-items: center;

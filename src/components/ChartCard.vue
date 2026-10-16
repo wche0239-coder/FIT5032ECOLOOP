@@ -15,13 +15,16 @@ import {
   Legend,
 } from 'chart.js'
 
+import { currentTheme, reduceMotion } from '../composables/useA11yPrefs'
+
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 const props = defineProps({
   title: { type: String, required: true },
   description: { type: String, default: '' },
   labels: { type: Array, required: true },
-  // [{ label, data: number[], color }]
+  // [{ label, data: number[], color }]. color is a CSS colour, or
+  // { pattern: 'hatch' | 'outline', color } for texture (high contrast theme)
   datasets: { type: Array, required: true },
   unit: { type: String, default: '' }, // shown after values, e.g. 'kg'
   stacked: { type: Boolean, default: false },
@@ -34,10 +37,41 @@ const canvas = ref(null)
 const showTable = ref(false)
 let chart = null
 
-const INK = '#17211C'
-const INK_SOFT = '#4B5750'
-const GRID = '#E3E7DF'
-const SURFACE = '#FFFFFF'
+// Axis, text and surface colours come from the active theme's tokens,
+// so charts follow the Accessibility settings (F.1).
+function themeColors() {
+  const css = getComputedStyle(document.documentElement)
+  const v = (name, fallback) => css.getPropertyValue(name).trim() || fallback
+  return {
+    ink: v('--ink', '#17211C'),
+    inkSoft: v('--ink-soft', '#4B5750'),
+    grid: v('--line', '#E3E7DF'),
+    surface: v('--panel', '#FFFFFF'),
+  }
+}
+
+/** Diagonal hatching for a second series that must not rely on colour. */
+function hatch(color) {
+  const c = document.createElement('canvas')
+  c.width = c.height = 8
+  const g = c.getContext('2d')
+  g.fillStyle = '#FFFFFF'
+  g.fillRect(0, 0, 8, 8)
+  g.strokeStyle = color
+  g.lineWidth = 2
+  g.beginPath()
+  g.moveTo(0, 8); g.lineTo(8, 0)
+  g.moveTo(-2, 2); g.lineTo(2, -2)
+  g.moveTo(6, 10); g.lineTo(10, 6)
+  g.stroke()
+  return g.createPattern(c, 'repeat')
+}
+
+function fillFor(color) {
+  if (typeof color === 'string') return { fill: color, hover: color + 'CC', edge: null }
+  if (color.pattern === 'hatch') return { fill: hatch(color.color), hover: hatch(color.color), edge: color.color }
+  return { fill: '#FFFFFF', hover: '#EEEEEE', edge: color.color } // 'outline'
+}
 
 const fmt = (v) => `${Number(v).toLocaleString('en-AU')}${props.unit ? ` ${props.unit}` : ''}`
 
@@ -59,23 +93,29 @@ const summary = computed(() => {
 
 function buildDatasets() {
   const last = props.datasets.length - 1
-  return props.datasets.map((d, i) => ({
+  const { surface } = themeColors()
+  return props.datasets.map((d, i) => {
+    const f = fillFor(d.color)
+    return {
     label: d.label,
     data: d.data,
-    backgroundColor: d.color,
-    hoverBackgroundColor: d.color + 'CC',
-    // 2px surface gap between stacked segments and neighbouring bars
-    borderColor: SURFACE,
-    borderWidth: props.stacked ? { top: 2, right: 0, bottom: 0, left: 0 } : 0,
+    backgroundColor: f.fill,
+    hoverBackgroundColor: f.hover,
+    // 2px surface gap between stacked segments and neighbouring bars;
+    // textured series get a solid edge instead so their shape is clear.
+    borderColor: f.edge || surface,
+    borderWidth: f.edge ? 2 : props.stacked ? { top: 2, right: 0, bottom: 0, left: 0 } : 0,
     // rounded data-end only (top of the stack / end of the bar)
     borderRadius: !props.stacked || i === last ? 4 : 0,
-    borderSkipped: 'start',
+    borderSkipped: f.edge ? false : 'start',
     maxBarThickness: 36,
-  }))
+    }
+  })
 }
 
 function options() {
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const { ink: INK, inkSoft: INK_SOFT, grid: GRID } = themeColors()
+  const noMotion = reduceMotion.value || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   const valueAxis = {
     beginAtZero: true,
     stacked: props.stacked,
@@ -93,7 +133,7 @@ function options() {
     indexAxis: props.horizontal ? 'y' : 'x',
     responsive: true,
     maintainAspectRatio: false,
-    animation: reduceMotion ? false : { duration: 300 },
+    animation: noMotion ? false : { duration: 300 },
     interaction: { mode: 'index', intersect: false },
     scales: props.horizontal ? { x: valueAxis, y: categoryAxis } : { x: categoryAxis, y: valueAxis },
     plugins: {
@@ -142,6 +182,12 @@ watch(
   },
   { deep: true }
 )
+
+// Redraw with the new colours when the person changes theme.
+watch(currentTheme, async () => {
+  await nextTick()
+  if (chart) render()
+})
 
 watch(showTable, async (table) => {
   if (!table) {

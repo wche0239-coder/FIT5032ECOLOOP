@@ -30,6 +30,19 @@
   --white: #FFFFFF;
   --danger: #A6291D;
 
+  /* Role tokens (F.1 themes): each theme below redefines these, and
+     components read only tokens, so a theme changes the whole site. */
+  --btn-bg: var(--signal);
+  --btn-ink: #FFFFFF;
+  --btn-hover: var(--signal-dark);
+  --focus: var(--caution);
+  --free-bg: var(--chalk-tint); --free-ink: #5A4515; --free-line: #A9852A;
+  --price-bg: var(--caution-tint); --price-ink: #7A340F; --price-line: var(--caution);
+  --ok-bg: #DEEAE4; --ok-ink: #1F5C4D;
+  --wait-bg: #F7EDCB; --wait-ink: #6B4E0E;
+  --bad-bg: #F6E2D5; --bad-ink: #8A2318;
+  --border-w: 1.5px;
+
   /* Aliases for older component styles that referenced these names
      (they were undefined, which made modal backgrounds transparent). */
   --bg: var(--panel);
@@ -44,6 +57,140 @@
   /* Shape */
   --radius-sm: 3px;
   --radius-md: 4px;
+}
+
+/* ---------------------------------------------------------------
+   Themes (F.1). Set on <html data-theme="…"> by useA11yPrefs.
+   Every text/background pair is at least 4.5:1, and borders and
+   focus rings at least 3:1 (WCAG 2.1 AA 1.4.3 and 1.4.11).
+   --------------------------------------------------------------- */
+
+/* Soft mint: the default look. Light mint fill buttons with dark
+   text; the deeper teal carries links and active states. */
+:root[data-theme='mint'], :root[data-theme='cvd'] {
+  --paper: #F4FBF9;
+  --paper-dim: #E3F6F1;
+  --panel: #FFFFFF;
+  --ink: #0D2B27;
+  --ink-soft: #4E6B66;
+  --ink-faint: #4E6B66;
+  --line: #CDE7E0;
+  --line-strong: #74948E;
+  --signal: #127566;
+  --signal-dark: #0D4F45;
+  --signal-tint: #E3F6F1;
+  --caution: #B4410E;
+  --caution-tint: #FFE9DC;
+  --caution-text: #9A3F12;
+  --chalk-tint: #FFF4D6;
+  --btn-bg: #3EC1AC;
+  --btn-ink: #0D2B27;
+  --btn-hover: #2BB3A0;
+  --focus: #127566;
+  --free-bg: #E3F6F1; --free-ink: #0E6F61; --free-line: #2A9584;
+  --price-bg: #FFE9DC; --price-ink: #9A3F12; --price-line: #C9622F;
+  --ok-bg: #E3F6F1; --ok-ink: #0E6F61;
+  --wait-bg: #FFF4D6; --wait-ink: #6E4A00;
+  --bad-bg: #FDE3E0; --bad-ink: #9B1C12;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+}
+
+/* Colour-blind safe: mint base, but every red/green meaning moves to
+   blue/orange (Okabe-Ito), which stay apart for protan, deutan and
+   tritan vision. Links turn blue so they don't rely on a green hue. */
+:root[data-theme='cvd'] {
+  --signal: #005A9C;
+  --signal-dark: #003F6E;
+  --signal-tint: #E1EEF8;
+  --focus: #0072B2;
+  --danger: #8A4B00;
+  --free-bg: #E1EEF8; --free-ink: #005A9C; --free-line: #0072B2;
+  --price-bg: #FCEBD9; --price-ink: #8A4B00; --price-line: #A86A00;
+  --ok-bg: #E1EEF8; --ok-ink: #005A9C;
+  --wait-bg: #EEEEEE; --wait-ink: #3D3D3D;
+  --bad-bg: #FCEBD9; --bad-ink: #8A4B00;
+}
+
+/* High contrast: black on white, 2px borders, blue underlined links,
+   and a black-and-amber focus ring that shows on any background. */
+:root[data-theme='contrast'] {
+  --paper: #FFFFFF;
+  --paper-dim: #FFFFFF;
+  --panel: #FFFFFF;
+  --ink: #000000;
+  --ink-soft: #000000;
+  --ink-faint: #000000;
+  --line: #000000;
+  --line-strong: #000000;
+  --signal: #0040A0;
+  --signal-dark: #002A6B;
+  --signal-tint: #FFFFFF;
+  --caution: #000000;
+  --caution-tint: #FFFFFF;
+  --caution-text: #000000;
+  --chalk-tint: #FFFFFF;
+  --danger: #8B0000;
+  --btn-bg: #000000;
+  --btn-ink: #FFFFFF;
+  --btn-hover: #333333;
+  --focus: #000000;
+  --free-bg: #FFFFFF; --free-ink: #000000; --free-line: #000000;
+  --price-bg: #FFFFFF; --price-ink: #000000; --price-line: #000000;
+  --ok-bg: #FFFFFF; --ok-ink: #000000;
+  --wait-bg: #FFFFFF; --wait-ink: #000000;
+  --bad-bg: #FFFFFF; --bad-ink: #000000;
+  --border-w: 2px;
+}
+:root[data-theme='contrast'] a,
+:root[data-theme='contrast'] .btn-link { text-decoration: underline; text-underline-offset: 2px; }
+:root[data-theme='contrast'] .nav-link.router-link-active { text-decoration: underline; text-decoration-thickness: 2px; }
+:root[data-theme='contrast'] :focus-visible,
+:root[data-theme='contrast'] .btn:focus-visible,
+:root[data-theme='contrast'] .form-check-input:focus-visible {
+  outline: 3px solid #000000;
+  outline-offset: 0;
+  box-shadow: 0 0 0 6px #FFBF00 !important;
+}
+:root[data-theme='contrast'] .btn-ghost,
+:root[data-theme='contrast'] .crate-card,
+:root[data-theme='contrast'] .ticket-card,
+:root[data-theme='contrast'] .form-control,
+:root[data-theme='contrast'] .form-select,
+:root[data-theme='contrast'] .meta-chip { border-width: 2px; border-color: #000000; }
+:root[data-theme='contrast'] h1[tabindex='-1']:focus-visible,
+:root[data-theme='contrast'] main:focus-visible { outline: none; box-shadow: none !important; }
+:root[data-theme='contrast'] .alert { border: 2px solid #000000; background: #FFFFFF; color: #000000; }
+:root[data-theme='contrast'] .placeholder-thumb { background: #000000; }
+:root[data-theme='contrast'] .table { --bs-table-striped-bg: #F0F0F0; }
+
+/* Text size (WCAG 1.4.4). Bootstrap sizes in rem, so the whole
+   layout scales from the root font size. */
+:root[data-text-size='large'] { font-size: 112.5%; }
+:root[data-text-size='x-large'] { font-size: 125%; }
+
+/* Easy-to-read font */
+:root[data-readable-font] {
+  --font-body: 'Atkinson Hyperlegible', 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Atkinson Hyperlegible', 'Inter', -apple-system, 'Segoe UI', sans-serif;
+}
+:root[data-readable-font] body { letter-spacing: 0.01em; line-height: 1.6; }
+
+/* Highlight links: every link underlined and shaded (WCAG 1.4.1) */
+:root[data-underline-links] a:not(.btn) {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  background: var(--signal-tint);
+}
+
+/* Reduce motion, chosen in the app (also follows the system setting below) */
+:root[data-reduce-motion] *,
+:root[data-reduce-motion] *::before,
+:root[data-reduce-motion] *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 * { box-sizing: border-box; }
@@ -79,7 +226,7 @@ a { color: var(--signal); text-decoration: none; }
 a:hover { color: var(--signal-dark); }
 
 :focus-visible {
-  outline: 2.5px solid var(--caution);
+  outline: 2.5px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -90,13 +237,18 @@ a:hover { color: var(--signal-dark); }
   font-size: 0.92rem;
   padding: 0.55rem 1.15rem;
 }
-.btn-primary {
-  background: var(--signal);
-  border-color: var(--signal);
+.btn-primary,
+.btn-primary:disabled,
+.btn-primary.disabled {
+  background: var(--btn-bg);
+  border-color: var(--btn-bg);
+  color: var(--btn-ink);
 }
-.btn-primary:hover, .btn-primary:focus {
-  background: var(--signal-dark);
-  border-color: var(--signal-dark);
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active,
+.btn-check:checked + .btn-primary {
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--btn-ink);
 }
 .btn-outline-primary {
   color: var(--signal);
@@ -105,19 +257,26 @@ a:hover { color: var(--signal-dark); }
 .btn-outline-primary:hover {
   background: var(--signal);
   border-color: var(--signal);
+  color: var(--white);
 }
 .btn-rust {
   background: var(--caution);
   border-color: var(--caution);
   color: var(--white);
 }
-.btn-rust:hover { background: #9C3E17; color: var(--white); }
+.btn-rust:hover { background: var(--caution-text); color: var(--white); }
 .btn-ghost {
   background: transparent;
   border: 1px solid var(--line-strong);
   color: var(--ink);
 }
 .btn-ghost:hover { border-color: var(--ink-soft); background: var(--paper-dim); }
+/* Selected segment in a radio button group (map travel mode, text size). */
+.btn-check:checked + .btn-ghost {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--white);
+}
 
 /* ---- Form controls ---- */
 .form-control, .form-select {
@@ -184,14 +343,14 @@ a:hover { color: var(--signal-dark); }
   transform: translateY(-50%);
 }
 .market-tag--free {
-  background: var(--chalk-tint);
-  border-color: #A9852A;
-  color: #5A4515;
+  background: var(--free-bg);
+  border-color: var(--free-line);
+  color: var(--free-ink);
 }
 .market-tag--price {
-  background: var(--caution-tint);
-  border-color: var(--caution);
-  color: #7A340F;
+  background: var(--price-bg);
+  border-color: var(--price-line);
+  color: var(--price-ink);
 }
 .market-tag--rotate-r { transform: none; }
 
@@ -208,7 +367,7 @@ a:hover { color: var(--signal-dark); }
 /* ---- Panels (forms, dashboard tiles) — flat, no shadow ---- */
 .crate-card {
   background: var(--panel);
-  border: 1.5px solid var(--line-strong);
+  border: var(--border-w) solid var(--line-strong);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
@@ -357,7 +516,7 @@ main:focus { outline: none; }
 .form-check-input:focus-visible,
 .page-link:focus-visible,
 .nav-link:focus-visible {
-  outline: 2.5px solid var(--caution);
+  outline: 2.5px solid var(--focus);
   outline-offset: 2px;
   box-shadow: none;
 }
@@ -400,4 +559,13 @@ p a, li a:not(.nav-link):not(.btn), .text-faint a, .text-soft a { text-decoratio
 code { color: #9B1D5A; }
 
 /* Shown under forms whose action needs the internet (F.1 offline) */
+/* Bootstrap form checks and pagination follow the theme. */
+.form-range { accent-color: var(--signal); }
+.form-range::-webkit-slider-thumb { background: var(--signal); }
+.form-range::-moz-range-thumb { background: var(--signal); }
+.form-check-input:checked { background-color: var(--signal); border-color: var(--signal); }
+.form-check-input { border-color: var(--line-strong); }
+.page-link { color: var(--signal); }
+.active > .page-link, .page-link.active { background-color: var(--signal); border-color: var(--signal); color: var(--white); }
+
 .offline-note { color: var(--ink-soft); display: flex; align-items: center; }

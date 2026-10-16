@@ -216,7 +216,7 @@ function onSent(address) {
   border-radius: 999px;
   border: 1px solid currentColor;
 }
-.status-pill--completed { color: #1F5C4D; background: #DEEAE4; }
-.status-pill--pending { color: #6B4E0E; background: #F7EDCB; }
-.status-pill--cancelled { color: #8A2318; background: #F6E2D5; }
+.status-pill--completed { color: var(--ok-ink); background: var(--ok-bg); }
+.status-pill--pending { color: var(--wait-ink); background: var(--wait-bg); }
+.status-pill--cancelled { color: var(--bad-ink); background: var(--bad-bg); }
 </style>

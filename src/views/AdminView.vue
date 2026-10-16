@@ -11,6 +11,7 @@ import { db, functions } from '../firebase'
 import { useAuth, ROLES } from '../composables/useAuth'
 import InteractiveTable from '../components/InteractiveTable.vue'
 import ChartCard from '../components/ChartCard.vue'
+import { currentTheme, CHART_PALETTES } from '../composables/useA11yPrefs'
 import BulkEmailDialog from '../components/BulkEmailDialog.vue'
 import { categories, getCategory } from '../data/categories'
 import {
@@ -97,27 +98,27 @@ onMounted(() => {
   loadExchanges()
 })
 
-// Colours: one blue for single-series charts; the reserved status set for
-// exchange status (always shown with a text label in the legend and table).
-const SERIES_BLUE = '#2A78D6'
-const STATUS_COLORS = { Completed: '#0CA30C', Pending: '#FAB219', Cancelled: '#D03B3B' }
+// Colours: one series colour for single-series charts; the reserved status
+// set for exchange status (always shown with a text label in the legend and
+// table). Both follow the person's colour theme (F.1 accessibility themes).
+const palette = computed(() => CHART_PALETTES[currentTheme.value] || CHART_PALETTES.mint)
 
 const filtered = computed(() => filterExchanges(exchanges.value, { period: period.value, category: category.value }))
 const activity = computed(() => kpis(filtered.value))
 const kgChart = computed(() => {
   const { months, values } = kgByMonth(filtered.value)
-  return { labels: months.map(monthLabel), datasets: [{ label: 'Kg diverted', data: values, color: SERIES_BLUE }] }
+  return { labels: months.map(monthLabel), datasets: [{ label: 'Kg diverted', data: values, color: palette.value.series }] }
 })
 const statusChart = computed(() => {
   const { months, series } = statusByMonth(filtered.value)
   return {
     labels: months.map(monthLabel),
-    datasets: STATUSES.map((s) => ({ label: s, data: series[s], color: STATUS_COLORS[s] })),
+    datasets: STATUSES.map((s) => ({ label: s, data: series[s], color: palette.value.status[s] })),
   }
 })
 const roleChart = computed(() => ({
   labels: ROLES.map((r) => r[0].toUpperCase() + r.slice(1)),
-  datasets: [{ label: 'Accounts', data: countByRole(users.value, ROLES), color: SERIES_BLUE }],
+  datasets: [{ label: 'Accounts', data: countByRole(users.value, ROLES), color: palette.value.series }],
 }))
 const filterSummary = computed(() => {
   const p = PERIODS.find((x) => x.value === period.value).label.toLowerCase()
