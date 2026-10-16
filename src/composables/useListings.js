@@ -11,6 +11,21 @@ import { sanitizeObject } from '../utils/sanitize'
 const listings = useLocalStorage('ecoloop_listings', seedListings)
 const requests = useLocalStorage('ecoloop_requests', [])
 
+/**
+ * Who may delete a listing (BR C.2 role-based authorisation):
+ *  - admins can delete any listing (moderation)
+ *  - everyone else only listings they posted themselves (matched by
+ *    Firebase user id, not display name, so two people called "Sam"
+ *    can't delete each other's items)
+ *  - signed-out visitors can't delete anything
+ * Seed listings have no ownerId, so only admins can remove them.
+ */
+export function canDeleteListing(listing, user) {
+  if (!listing || !user) return false
+  if (user.role === 'admin') return true
+  return Boolean(listing.ownerId) && listing.ownerId === user.id
+}
+
 // Rough diversion estimate used for the business dashboard's
 // "kg diverted" stat card — kilograms per category, used only for
 // display purposes.
@@ -52,8 +67,19 @@ export function useListings() {
     return stamped
   }
 
-  function removeListing(id) {
+  /**
+   * Deletes a listing if `user` is allowed to. The permission check
+   * lives here as well as in the UI, so hiding the button isn't the
+   * only thing stopping an unauthorised delete.
+   * @returns {boolean} true if a listing was removed
+   */
+  function removeListing(id, user) {
+    const target = listings.value.find((l) => l.id === id)
+    if (!canDeleteListing(target, user)) return false
     listings.value = listings.value.filter((l) => l.id !== id)
+    // Drop pending requests for the deleted item too.
+    requests.value = requests.value.filter((r) => r.listingId !== id)
+    return true
   }
 
   function sendRequest(listingId, message) {
@@ -76,6 +102,7 @@ export function useListings() {
     addListing,
     addBulkListings,
     removeListing,
+    canDeleteListing,
     sendRequest,
     estimateKg,
     totalItems,

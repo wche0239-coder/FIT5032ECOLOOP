@@ -5,17 +5,17 @@ import { useAuth } from '../composables/useAuth'
 const { currentUser, isLoggedIn, role, logout } = useAuth()
 const router = useRouter()
 
-function handleLogout() {
-  logout()
+async function handleLogout() {
+  await logout()
   router.push('/')
 }
 </script>
 
 <template>
-  <nav class="eco-navbar navbar navbar-expand-lg sticky-top">
+  <nav class="eco-navbar navbar navbar-expand-lg sticky-top" aria-label="Main">
     <div class="container">
-      <RouterLink class="brand-mark navbar-brand" to="/">
-        <i class="bi bi-arrow-repeat"></i> EcoLoop
+      <RouterLink class="brand-mark navbar-brand" to="/" aria-label="EcoLoop home">
+        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> EcoLoop
       </RouterLink>
 
       <button
@@ -37,6 +37,9 @@ function handleLogout() {
           <li class="nav-item">
             <RouterLink class="nav-link" to="/post-item">Post an item</RouterLink>
           </li>
+          <li v-if="isLoggedIn" class="nav-item">
+            <RouterLink class="nav-link" to="/reports">Data &amp; reports</RouterLink>
+          </li>
           <li v-if="!isLoggedIn || role === 'business'" class="nav-item">
             <RouterLink class="nav-link" to="/business">Business dashboard</RouterLink>
           </li>
@@ -48,10 +51,10 @@ function handleLogout() {
         <div class="d-flex align-items-center gap-2">
           <template v-if="isLoggedIn">
             <span class="text-soft small d-none d-lg-inline">
-              <i class="bi bi-person-circle me-1"></i>{{ currentUser.name }}
+              <i class="bi bi-person-circle me-1" aria-hidden="true"></i>{{ currentUser.name }}
               <span class="market-tag ms-1" style="transform: none; padding: 0.1rem 0.4rem;">{{ role }}</span>
             </span>
-            <button class="btn btn-ghost btn-sm" @click="handleLogout">Log out</button>
+            <button type="button" class="btn btn-ghost btn-sm" @click="handleLogout">Log out</button>
           </template>
           <template v-else>
             <RouterLink class="btn btn-ghost btn-sm" to="/login">Log in</RouterLink>

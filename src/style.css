@@ -14,18 +14,27 @@
   --panel: #FFFFFF;
   --ink: #17211C;
   --ink-soft: #4B5750;
-  --ink-faint: #7C877E;
+  /* Darkened for WCAG 2.1 AA (BR E.3): ≥4.5:1 on every background it sits on. */
+  --ink-faint: #59655C;
   --line: #C7CDBA;
-  --line-strong: #9AA491;
+  /* Form-field borders need ≥3:1 against white (WCAG 1.4.11). */
+  --line-strong: #7E8A76;
   --signal: #1F5C4D;
   --signal-dark: #123D33;
   --signal-tint: #DEEAE4;
   --caution: #C4501F;
   --caution-tint: #F6E2D5;
+  --caution-text: #A33F17; /* caution colour darkened for text (≥4.5:1) */
   --chalk: #D9B23C;
   --chalk-tint: #F7EDCB;
   --white: #FFFFFF;
   --danger: #A6291D;
+
+  /* Aliases for older component styles that referenced these names
+     (they were undefined, which made modal backgrounds transparent). */
+  --bg: var(--panel);
+  --primary: var(--signal);
+  --bg-kraft: var(--paper-dim);
 
   /* Type */
   --font-display: 'Space Grotesk', 'Arial Narrow', sans-serif;
@@ -319,3 +328,73 @@ a:hover { color: var(--signal-dark); }
   align-items: center;
   gap: 0.5rem;
 }
+
+/* =========================================================
+   Accessibility helpers — BR (E.3), WCAG 2.1 AA
+   ========================================================= */
+
+/* Skip link: first thing a keyboard user reaches (2.4.1 Bypass Blocks). */
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -100px;
+  z-index: 2000;
+  background: var(--ink);
+  color: var(--white);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+.skip-link:focus { top: 0.75rem; color: var(--white); }
+
+/* Programmatically focused containers shouldn't show a ring on click. */
+main:focus { outline: none; }
+
+/* Keyboard focus is always visible, including inside Bootstrap widgets
+   that normally replace the outline with a faint box-shadow. */
+.btn:focus-visible,
+.btn-check:focus-visible + .btn,
+.form-check-input:focus-visible,
+.page-link:focus-visible,
+.nav-link:focus-visible {
+  outline: 2.5px solid var(--caution);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* "or" divider on the login form */
+.divider-or {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+}
+.divider-or::before, .divider-or::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--line);
+}
+
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+legend { float: none; width: auto; }
+
+/* Respect reduced-motion preferences (2.3.3, AAA, but cheap to honour). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Links inside running text are underlined, so they're identifiable
+   without relying on colour alone (WCAG 1.4.1). */
+p a, li a:not(.nav-link):not(.btn), .text-faint a, .text-soft a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* Bootstrap's default link-button blue fails contrast on our paper tones. */
+.btn-link { color: var(--signal); text-decoration: underline; text-underline-offset: 2px; }
+.btn-link:hover { color: var(--signal-dark); }
+
+/* Bootstrap's pink <code> colour is under 4.5:1 on light backgrounds. */
+code { color: #9B1D5A; }

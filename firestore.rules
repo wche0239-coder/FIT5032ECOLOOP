@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Server-side enforcement for BR (C.2) roles and BR (C.4) validation.
+// These run on Google's servers, so a user editing the front-end code
+// still cannot give themselves admin or read other people's profiles.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{uid} {
+      // You can read your own profile; admins can read everyone's.
+      allow read: if (isSignedIn() && request.auth.uid == uid) || isAdmin();
+
+      // Self-registration may only create an individual or business
+      // profile, with a sensibly sized name and the account's own email.
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role in ['individual', 'business']
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.email == request.auth.token.email;
+
+      // Users may update their own profile but never its role. Roles are
+      // changed only by the setUserRole Cloud Function (Admin SDK), which
+      // checks the caller is an admin and records who made the change.
+      allow update: if isSignedIn() && request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role;
+
+      allow delete: if isAdmin();
+    }
+
+    // Everything else is closed by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
