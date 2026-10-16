@@ -307,6 +307,22 @@ with jsPDF + AutoTable (automatically landscape for wide tables).
 - Charts use Chart.js through a reusable `ChartCard.vue`; the maths lives
   in `src/utils/dashboardStats.js` (pure functions, unit-tested).
 
+### F.1 (2) Bulk email to selected users
+On the Admin dashboard, admins tick users in the user table (or "Select all
+shown" after searching or filtering, e.g. all business accounts) and press
+**Email selected** to write an announcement.
+
+- The `sendBulkEmail` Cloud Function re-checks that the caller is an admin,
+  validates the subject and message (including blocking newlines in the
+  subject, a header-injection trick), and accepts **user ids only**: it looks
+  up email addresses itself, so a tampered request can't use EcoLoop's
+  SendGrid account to email arbitrary people.
+- Each person gets their own copy starting "Hi <name>,", so nobody sees the
+  other recipients' addresses. Up to 100 recipients per send.
+- Every send is recorded in the `announcements` collection (who, when, how
+  many) for accountability; only admins can read it.
+- Validation is unit-tested (`functions/bulk.test.js`).
+
 ## Notes for markers
 
 - Configuration lives in `.env` (see `.env.example`); no keys are committed.

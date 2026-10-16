@@ -10,6 +10,7 @@ import { db, functions } from '../firebase'
 import { useAuth, ROLES } from '../composables/useAuth'
 import InteractiveTable from '../components/InteractiveTable.vue'
 import ChartCard from '../components/ChartCard.vue'
+import BulkEmailDialog from '../components/BulkEmailDialog.vue'
 import { categories, getCategory } from '../data/categories'
 import {
   PERIODS,
@@ -128,6 +129,8 @@ const byRole = computed(() => {
 })
 
 const columns = [
+  // Selection column for bulk email (F.1). Formats to '' so search ignores it.
+  { key: 'select', label: 'Select', sortable: false, filterable: false, format: () => '' },
   { key: 'name', label: 'Name' },
   { key: 'email', label: 'Email' },
   {
@@ -144,6 +147,25 @@ const columns = [
     filterable: false,
   },
 ]
+
+// ---- Bulk email (F.1) ----
+const selectedIds = ref([])
+const emailRecipients = ref(null)
+const selectedUsers = computed(() => users.value.filter((u) => selectedIds.value.includes(u.id)))
+
+function selectAll(rows) {
+  selectedIds.value = [...new Set([...selectedIds.value, ...rows.map((r) => r.id)])]
+}
+function clearSelection() {
+  selectedIds.value = []
+}
+function openBulkEmail() {
+  emailRecipients.value = selectedUsers.value
+}
+function onBulkSent(result) {
+  status.value = `Announcement sent to ${result.sent} ${result.sent === 1 ? 'person' : 'people'}${result.skipped ? ` (${result.skipped} skipped: no email address)` : ''}.`
+  clearSelection()
+}
 
 const setUserRole = httpsCallable(functions, 'setUserRole')
 
@@ -209,11 +231,37 @@ async function saveRole(user) {
           <div class="col-12 col-lg-8">
             <InteractiveTable
               caption="User accounts"
-              description="Choose a new role and press Save. You can't change your own role."
+              description="Tick people to email them, or choose a new role and press Save. You can't change your own role."
               :columns="columns"
               :rows="users"
               :default-sort="{ key: 'name', dir: 'asc' }"
             >
+              <template #actions="{ rows }">
+                <button type="button" class="btn btn-ghost btn-sm" @click="selectAll(rows)">
+                  Select all shown ({{ rows.length }})
+                </button>
+                <button v-if="selectedIds.length" type="button" class="btn btn-ghost btn-sm" @click="clearSelection">
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  :disabled="!selectedIds.length"
+                  @click="openBulkEmail"
+                >
+                  <i class="bi bi-envelope me-1" aria-hidden="true"></i>Email selected ({{ selectedIds.length }})
+                </button>
+              </template>
+              <template #cell-select="{ row }">
+                <input
+                  :id="`select-${row.id}`"
+                  v-model="selectedIds"
+                  type="checkbox"
+                  class="form-check-input"
+                  :value="row.id"
+                  :aria-label="`Select ${row.name}`"
+                />
+              </template>
               <template #cell-role="{ row }">
                 <span v-if="row.id === currentUser?.id" class="small">
                   <span class="text-capitalize fw-semibold">{{ row.role }}</span>
@@ -320,6 +368,8 @@ async function saveRole(user) {
           </div>
         </div>
       </template>
+
+      <BulkEmailDialog :recipients="emailRecipients" @close="emailRecipients = null" @sent="onBulkSent" />
 
       <p class="visually-hidden" role="status" aria-live="polite">{{ status }}</p>
       <p v-if="status" class="small mt-3" aria-hidden="true">

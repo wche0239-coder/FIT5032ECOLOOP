@@ -24,6 +24,7 @@ const { initializeApp } = require('firebase-admin/app')
 const { getFirestore, FieldValue } = require('firebase-admin/firestore')
 const { validateEmailRequest, escapeHtml } = require('./validate')
 const { applyRoleChange, RoleChangeError } = require('./roles')
+const { validateBulkRequest, messageToHtml } = require('./bulk')
 const demoExchanges = require('./demoExchanges.json')
 
 initializeApp()
@@ -144,5 +145,63 @@ exports.seedDemoExchanges = onCall(
     await batch.commit()
     logger.info('Demo exchanges loaded', { by: request.auth.uid, count: demoExchanges.length })
     return { count: demoExchanges.length }
+  }
+)
+
+// sendBulkEmail (F.1): an admin emails an announcement to users they picked
+// in the Admin dashboard. Each person gets their own copy (nobody sees the
+// other recipients), addresses are looked up here from user ids, and every
+// send is recorded in the announcements collection for accountability.
+exports.sendBulkEmail = onCall(
+  {
+    region: 'australia-southeast1',
+    secrets: [SENDGRID_API_KEY],
+    maxInstances: 2,
+    timeoutSeconds: 60,
+  },
+  async (request) => {
+    await requireAdmin(request)
+    const result = validateBulkRequest(request.data)
+    if (!result.ok) throw new HttpsError('invalid-argument', result.error)
+    const { uids, subject, message } = result.value
+
+    const db = getFirestore()
+    const snaps = await db.getAll(...uids.map((uid) => db.collection('users').doc(uid)))
+    const recipients = snaps
+      .filter((s) => s.exists && typeof s.data().email === 'string')
+      .map((s) => ({ email: s.data().email, name: s.data().name || '' }))
+    if (!recipients.length) throw new HttpsError('not-found', 'None of the selected users have an email address.')
+
+    const bodyHtml = messageToHtml(message, escapeHtml)
+    const messages = recipients.map((r) => ({
+      to: { email: r.email, name: r.name || undefined },
+      from: { email: SENDGRID_FROM.value(), name: 'EcoLoop' },
+      subject,
+      text: `${r.name ? `Hi ${r.name},\n\n` : ''}${message}\n\n— The EcoLoop team`,
+      html: `
+        <div style="font-family:Arial,sans-serif;color:#17211C;max-width:560px;">
+          ${r.name ? `<p>Hi ${escapeHtml(r.name)},</p>` : ''}
+          ${bodyHtml}
+          <p style="font-size:12px;color:#4B5750;">— The EcoLoop team · GreenLoop Collective, Melbourne</p>
+        </div>`,
+    }))
+
+    sgMail.setApiKey(SENDGRID_API_KEY.value())
+    try {
+      await sgMail.send(messages)
+    } catch (err) {
+      logger.error('Bulk send failed', { code: err.code, body: err.response?.body })
+      throw new HttpsError('internal', 'The email service rejected the announcement. Check the function logs.')
+    }
+
+    await db.collection('announcements').add({
+      subject,
+      message,
+      recipientCount: recipients.length,
+      sentBy: request.auth.uid,
+      sentAt: FieldValue.serverTimestamp(),
+    })
+    logger.info('Announcement sent', { by: request.auth.uid, count: recipients.length })
+    return { sent: recipients.length, skipped: uids.length - recipients.length }
   }
 )
