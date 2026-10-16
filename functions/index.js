@@ -24,8 +24,18 @@ const { initializeApp } = require('firebase-admin/app')
 const { getFirestore, FieldValue } = require('firebase-admin/firestore')
 const { validateEmailRequest, escapeHtml } = require('./validate')
 const { applyRoleChange, RoleChangeError } = require('./roles')
+const demoExchanges = require('./demoExchanges.json')
 
 initializeApp()
+
+/** Throws unless the signed-in caller has role 'admin' in Firestore (checked server-side). */
+async function requireAdmin(request) {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Please log in first.')
+  const snap = await getFirestore().collection('users').doc(request.auth.uid).get()
+  if (!snap.exists || snap.data().role !== 'admin') {
+    throw new HttpsError('permission-denied', 'Only admins can do this.')
+  }
+}
 
 const SENDGRID_API_KEY = defineSecret('SENDGRID_API_KEY')
 // Must be a Single Sender or domain you have verified in SendGrid.
@@ -114,5 +124,25 @@ exports.setUserRole = onCall(
       logger.error('setUserRole failed', err)
       throw new HttpsError('internal', 'Could not change the role. Please try again.')
     }
+  }
+)
+
+// seedDemoExchanges (F.1 admin dashboard): loads the 86-row demo exchange
+// history into Firestore so the dashboard charts read real Firestore data.
+// Admin-only and idempotent: fixed document ids mean running it twice just
+// overwrites the same rows instead of duplicating them.
+exports.seedDemoExchanges = onCall(
+  { region: 'australia-southeast1', maxInstances: 2, timeoutSeconds: 30 },
+  async (request) => {
+    await requireAdmin(request)
+    const db = getFirestore()
+    const batch = db.batch()
+    for (const row of demoExchanges) {
+      const { id, ...data } = row
+      batch.set(db.collection('exchanges').doc(id), { ...data, demo: true })
+    }
+    await batch.commit()
+    logger.info('Demo exchanges loaded', { by: request.auth.uid, count: demoExchanges.length })
+    return { count: demoExchanges.length }
   }
 )

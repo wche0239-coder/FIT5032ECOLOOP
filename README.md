@@ -281,6 +281,32 @@ showing — after search, column filters and sort — across all pages. CSV is
 UTF-8 with proper quoting so it opens correctly in Excel; PDF is generated
 with jsPDF + AutoTable (automatically landscape for wide tables).
 
+## Category F — Innovation (BR F.1)
+
+### F.1 (1) Admin dashboard with interactive charts
+`/admin` (admin role only) is a dashboard for GreenLoop Collective staff:
+
+- **Community:** account totals and a breakdown by role (individual,
+  business, admin) as tiles and a chart, plus the user table where admins
+  change roles (via the `setUserRole` Cloud Function).
+- **Exchange activity:** read live from the Firestore `exchanges`
+  collection. One filter row (period and category) rescopes every number
+  and chart below it: total exchanges, completed exchanges, kilograms kept
+  out of landfill and completion rate, a monthly "kg kept out of landfill"
+  chart and a stacked "exchanges by status" chart.
+- **Interactive:** hover or tap a bar for its exact value, click a legend
+  item to hide a status, and filters animate the charts in place.
+- **Accessible:** each chart has a text summary for screen readers and a
+  "Show as table" toggle with the same numbers, so nothing depends on
+  seeing the chart or using a mouse. Status colours are always paired with
+  text labels.
+- **Data:** an admin can load the 86-row demo history into Firestore with
+  one button (`seedDemoExchanges` Cloud Function, admin-only and
+  idempotent). Firestore rules let only admins read `exchanges`; nobody
+  can write to it from the browser.
+- Charts use Chart.js through a reusable `ChartCard.vue`; the maths lives
+  in `src/utils/dashboardStats.js` (pure functions, unit-tested).
+
 ## Notes for markers
 
 - Configuration lives in `.env` (see `.env.example`); no keys are committed.
