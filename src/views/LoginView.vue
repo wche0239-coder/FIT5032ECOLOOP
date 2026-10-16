@@ -1,8 +1,10 @@
 <script setup>
+import { useOnline } from '../composables/useOnline'
 import { reactive, computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { required, minLength, isEmail, runValidators } from '../utils/validators'
+const { isOnline } = useOnline()
 
 const router = useRouter()
 const route = useRoute()
@@ -94,11 +96,14 @@ async function onGoogle() {
         />
         <p v-if="showError('password')" id="password-error" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.password }}</p>
 
-        <button type="submit" class="btn btn-primary w-100 mt-3" :disabled="isSubmitting">
+        <button type="submit" class="btn btn-primary w-100 mt-3" :disabled="isSubmitting || !isOnline">
           {{ isSubmitting ? 'Logging in…' : 'Log in' }}
         </button>
+        <p v-if="!isOnline" class="small offline-note mt-2 mb-0">
+          <i class="bi bi-wifi-off me-1" aria-hidden="true"></i>You're offline. Logging in needs an internet connection.
+        </p>
         <div class="divider-or my-3" aria-hidden="true"><span>or</span></div>
-        <button type="button" class="btn btn-ghost w-100" :disabled="isSubmitting" @click="onGoogle">
+        <button type="button" class="btn btn-ghost w-100" :disabled="isSubmitting || !isOnline" @click="onGoogle">
           <i class="bi bi-google me-1" aria-hidden="true"></i>Continue with Google
         </button>
         <p class="text-faint small text-center mt-3 mb-0">

@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { categories } from '../data/categories'
 import { useListings } from '../composables/useListings'
@@ -8,11 +8,13 @@ import { useAuth } from '../composables/useAuth'
 import { required, minLength, isPositiveNumber, runValidators } from '../utils/validators'
 import { hasMapbox, searchPlaces } from '../utils/mapboxApi'
 import { suburbCentreFor } from '../data/suburbs'
+import { useOnline } from '../composables/useOnline'
 
 const router = useRouter()
 const { addListing } = useListings()
 const { currentUser } = useAuth()
 const drafts = useLocalStorage('ecoloop_drafts', [])
+const { isOnline } = useOnline()
 
 const step = ref('details') // 'details' | 'pickup'
 
@@ -29,6 +31,77 @@ const form = reactive({
 })
 
 const photos = ref([]) // { name, url }
+
+// ---- F.1 offline feature: automatic draft saving ----
+// Everything typed is saved to this device as you go (localStorage), so a
+// dropped connection, a closed tab or a flat battery doesn't lose the
+// listing. It's restored next time, and cleared once the item is posted.
+// Photos can't be stored this way, so the notice asks to re-add them.
+const AUTOSAVE_KEY = 'ecoloop_post_autosave'
+const restoredAt = ref(null)
+const autosavedAt = ref(null)
+let autosaveTimer = null
+
+function hasContent() {
+  return Boolean(form.title.trim() || form.description.trim() || form.pickupPoint.trim())
+}
+
+onMounted(() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(AUTOSAVE_KEY) || 'null')
+    if (saved?.form) {
+      Object.assign(form, saved.form)
+      if (saved.step === 'pickup' || saved.step === 'details') step.value = saved.step
+      restoredAt.value = new Date(saved.savedAt)
+    }
+  } catch {
+    /* storage unavailable: start with an empty form */
+  }
+})
+
+watch(
+  [form, step],
+  () => {
+    clearTimeout(autosaveTimer)
+    autosaveTimer = setTimeout(() => {
+      try {
+        if (!hasContent()) {
+          localStorage.removeItem(AUTOSAVE_KEY)
+          autosavedAt.value = null
+          return
+        }
+        const savedAt = new Date().toISOString()
+        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ form: { ...form }, step: step.value, savedAt }))
+        autosavedAt.value = new Date(savedAt)
+      } catch {
+        /* storage full or blocked: the form still works, it just isn't saved */
+      }
+    }, 400)
+  },
+  { deep: true }
+)
+
+function clearAutosave() {
+  clearTimeout(autosaveTimer)
+  try {
+    localStorage.removeItem(AUTOSAVE_KEY)
+  } catch {
+    /* ignore */
+  }
+  autosavedAt.value = null
+}
+
+function startOver() {
+  clearAutosave()
+  Object.assign(form, {
+    title: '', condition: '', category: '', description: '', listingType: 'free',
+    price: '', pickupPoint: '', weekdayEvenings: false, weekends: false,
+  })
+  step.value = 'details'
+  restoredAt.value = null
+}
+
+const timeFmt = (d) => d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })
 const touched = reactive({})
 const submitted = ref(false)
 const successMessage = ref('')
@@ -87,7 +160,8 @@ function saveDraft() {
 // Turns the pickup point into map coordinates (BR E.2) so the listing
 // appears in the right place. Falls back to a known suburb centre.
 async function locatePickup(place) {
-  if (hasMapbox) {
+  // Offline: skip the lookup and use the suburb centre straight away.
+  if (hasMapbox && isOnline.value) {
     try {
       const [best] = await searchPlaces(place)
       if (best) return { lng: best.coords[0], lat: best.coords[1] }
@@ -140,6 +214,7 @@ async function publish() {
     pickupWindow: availability,
   })
 
+  clearAutosave()
   router.push('/browse')
 }
 </script>
@@ -148,7 +223,23 @@ async function publish() {
   <div class="section-pad">
     <div class="container" style="max-width: 760px;">
       <div class="eyebrow mb-1">List an item</div>
-      <h1 class="h3 mb-4">Post an item</h1>
+      <h1 class="h3 mb-3">Post an item</h1>
+
+      <div v-if="restoredAt" class="restored-note mb-3" role="status">
+        <i class="bi bi-clock-history me-2" aria-hidden="true"></i>
+        <span class="flex-grow-1">
+          We restored the listing you started at {{ timeFmt(restoredAt) }}.
+          Photos aren't kept in drafts, so add them again.
+        </span>
+        <button type="button" class="btn btn-ghost btn-sm" @click="startOver">Start over</button>
+      </div>
+      <p class="small text-soft mb-3" aria-live="polite">
+        <template v-if="autosavedAt">
+          <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Draft saved on this device at {{ timeFmt(autosavedAt) }}
+          <template v-if="!isOnline"> (you're offline; it's safe)</template>
+        </template>
+        <template v-else>Your progress is saved on this device as you type.</template>
+      </p>
 
       <!-- Step tabs -->
       <div class="d-flex gap-2 mb-4">
@@ -327,6 +418,17 @@ async function publish() {
 </template>
 
 <style scoped>
+.restored-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--signal-tint);
+  font-size: 0.9rem;
+}
 .photo-thumb {
   position: relative;
   width: 84px;

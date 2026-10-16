@@ -3,6 +3,7 @@
 //   BR (D.3) two interactive tables (sort, search, per-column search, 10/page)
 //   BR (E.4) export what's shown as CSV or PDF
 //   BR (D.2) email the PDF as an attachment (via the Cloud Function, BR E.1)
+import { useOnline } from '../composables/useOnline'
 import { ref, computed } from 'vue'
 import InteractiveTable from '../components/InteractiveTable.vue'
 import EmailReportDialog from '../components/EmailReportDialog.vue'
@@ -10,6 +11,7 @@ import { useListings } from '../composables/useListings'
 import { categories, getCategory } from '../data/categories'
 import { mockExchanges } from '../data/mockExchanges'
 import { downloadCsv, downloadPdf } from '../utils/exporters'
+const { isOnline } = useOnline()
 
 const { listings } = useListings()
 
@@ -145,7 +147,8 @@ function onSent(address) {
             <button
               type="button"
               class="btn btn-primary btn-sm"
-              :disabled="rows.length === 0"
+              :disabled="rows.length === 0 || !isOnline"
+              :title="!isOnline ? 'Emailing needs an internet connection' : undefined"
               @click="openEmail('Marketplace listings', 'ecoloop-listings', columns, rows)"
             >
               <i class="bi bi-envelope me-1" aria-hidden="true"></i>Email PDF
@@ -179,7 +182,8 @@ function onSent(address) {
             <button
               type="button"
               class="btn btn-primary btn-sm"
-              :disabled="rows.length === 0"
+              :disabled="rows.length === 0 || !isOnline"
+              :title="!isOnline ? 'Emailing needs an internet connection' : undefined"
               @click="openEmail('Exchange history', 'ecoloop-exchanges', columns, rows)"
             >
               <i class="bi bi-envelope me-1" aria-hidden="true"></i>Email PDF

@@ -323,6 +323,30 @@ shown" after searching or filtering, e.g. all business accounts) and press
   many) for accountability; only admins can read it.
 - Validation is unit-tested (`functions/bulk.test.js`).
 
+### F.1 (3) Offline features
+Volunteers and residents often use EcoLoop on phones with patchy signal.
+Three offline features keep it usable:
+
+1. **Online/offline detection** (`src/composables/useOnline.js`,
+   `ConnectionBanner.vue`): a banner announces when the device goes offline
+   (and briefly when it reconnects; screen readers hear both). Actions that
+   need the internet (logging in, emailing, map search and directions,
+   admin changes) are paused with a short explanation instead of failing
+   with an error. Exporting CSV/PDF and browsing keep working.
+2. **Works with no connection** (`vite-plugin-pwa`, Workbox): a service
+   worker caches the app itself, so after one visit EcoLoop opens and
+   navigates even fully offline. Product photos are cached when first
+   viewed; Firebase, SendGrid and Mapbox requests are never cached. The
+   web app manifest and icons make it installable to a phone's home screen.
+   `firebase.json` serves `sw.js` and `index.html` with `no-cache`, so new
+   deployments reach users straight away.
+3. **Automatic draft saving** (Post an item): everything typed is saved to
+   this device as you go (localStorage), restored next time with a notice
+   and a "Start over" option, and cleared when the item is posted. A dropped
+   connection or closed tab never loses a half-written listing. Posting
+   itself also works offline (the pickup location falls back to the suburb
+   centre when the map service can't be reached).
+
 ## Notes for markers
 
 - Configuration lives in `.env` (see `.env.example`); no keys are committed.

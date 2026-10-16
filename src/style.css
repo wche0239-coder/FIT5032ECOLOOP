@@ -398,3 +398,6 @@ p a, li a:not(.nav-link):not(.btn), .text-faint a, .text-soft a { text-decoratio
 
 /* Bootstrap's pink <code> colour is under 4.5:1 on light backgrounds. */
 code { color: #9B1D5A; }
+
+/* Shown under forms whose action needs the internet (F.1 offline) */
+.offline-note { color: var(--ink-soft); display: flex; align-items: center; }

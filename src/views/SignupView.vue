@@ -1,8 +1,10 @@
 <script setup>
+import { useOnline } from '../composables/useOnline'
 import { reactive, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { required, minLength, isEmail, matches, runValidators } from '../utils/validators'
+const { isOnline } = useOnline()
 
 const router = useRouter()
 const { register } = useAuth()
@@ -117,9 +119,12 @@ async function onSubmit() {
         />
         <p v-if="showError('confirmPassword')" id="confirmPassword-error" class="field-error"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ errors.confirmPassword }}</p>
 
-        <button type="submit" class="btn btn-primary w-100 mt-3" :disabled="isSubmitting">
+        <button type="submit" class="btn btn-primary w-100 mt-3" :disabled="isSubmitting || !isOnline">
           {{ isSubmitting ? 'Creating account…' : 'Create account' }}
         </button>
+        <p v-if="!isOnline" class="small offline-note mt-2 mb-0">
+          <i class="bi bi-wifi-off me-1" aria-hidden="true"></i>You're offline. Creating an account needs an internet connection.
+        </p>
         <p class="text-faint small text-center mt-3 mb-0">
           Already have an account? <router-link to="/login">Log in</router-link>
         </p>

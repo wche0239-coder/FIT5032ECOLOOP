@@ -3,6 +3,7 @@
 // Role changes go through the setUserRole Cloud Function (BR E.1): it
 // re-checks on the server that the caller is an admin, and firestore.rules
 // blocks role changes from the browser, so the function is the only path.
+import { useOnline } from '../composables/useOnline'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { collection, getDocs } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
@@ -22,6 +23,7 @@ import {
   countByRole,
   monthLabel,
 } from '../utils/dashboardStats'
+const { isOnline } = useOnline()
 
 const { currentUser } = useAuth()
 
@@ -246,7 +248,7 @@ async function saveRole(user) {
                 <button
                   type="button"
                   class="btn btn-primary btn-sm"
-                  :disabled="!selectedIds.length"
+                  :disabled="!selectedIds.length || !isOnline"
                   @click="openBulkEmail"
                 >
                   <i class="bi bi-envelope me-1" aria-hidden="true"></i>Email selected ({{ selectedIds.length }})
@@ -280,7 +282,7 @@ async function saveRole(user) {
                   <button
                     type="button"
                     class="btn btn-primary btn-sm"
-                    :disabled="saving === row.id || pendingRole[row.id] === row.role"
+                    :disabled="saving === row.id || pendingRole[row.id] === row.role || !isOnline"
                     @click="saveRole(row)"
                   >
                     {{ saving === row.id ? 'Saving…' : 'Save' }}<span class="visually-hidden"> role for {{ row.name }}</span>
@@ -316,7 +318,7 @@ async function saveRole(user) {
       <div v-else-if="!exchanges.length" class="crate-card p-4 text-center">
         <p class="mb-2 fw-semibold">No exchange history in Firestore yet.</p>
         <p class="small text-soft mb-3">Load the 86-row demo history to see the charts. Running it again is safe; it won't duplicate rows.</p>
-        <button type="button" class="btn btn-primary" :disabled="seeding" @click="loadDemoData">
+        <button type="button" class="btn btn-primary" :disabled="seeding || !isOnline" @click="loadDemoData">
           {{ seeding ? 'Loading…' : 'Load demo exchange data' }}
         </button>
       </div>

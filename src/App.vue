@@ -3,6 +3,7 @@ import { ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import NavBar from './components/NavBar.vue'
 import AppFooter from './components/AppFooter.vue'
+import ConnectionBanner from './components/ConnectionBanner.vue'
 import { flashMessage, clearFlash } from './composables/useFlash'
 
 // BR (E.3) — in a single-page app the browser doesn't move focus when
@@ -38,6 +39,7 @@ watch(
 <template>
   <a href="#main-content" class="skip-link" @click.prevent="mainEl?.focus()">Skip to main content</a>
   <NavBar />
+  <ConnectionBanner />
   <div v-if="flashMessage" class="alert alert-warning rounded-0 mb-0 py-2 text-center small" role="alert">
     <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ flashMessage }}
     <button type="button" class="btn-close btn-sm ms-2" aria-label="Dismiss message" @click="clearFlash"></button>

@@ -3,10 +3,12 @@
 // Firebase emails a secure, single-use link; the app never handles the
 // new password. The confirmation message is the same whether or not an
 // account exists, so this page can't be used to find out who's registered.
+import { useOnline } from '../composables/useOnline'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { required, isEmail, runValidators } from '../utils/validators'
+const { isOnline } = useOnline()
 
 const route = useRoute()
 const { resetPassword } = useAuth()
@@ -81,7 +83,7 @@ async function onSubmit() {
           <i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ emailError }}
         </p>
 
-        <button type="submit" class="btn btn-primary w-100 mt-3" :disabled="sending">
+        <button type="submit" class="btn btn-primary w-100 mt-3" :disabled="sending || !isOnline">
           {{ sending ? 'Sending…' : 'Send reset link' }}
         </button>
         <p class="text-faint small text-center mt-3 mb-0">
