@@ -3,6 +3,7 @@
 //   BR (D.3) two interactive tables (sort, search, per-column search, 10/page)
 //   BR (E.4) export what's shown as CSV or PDF
 //   BR (D.2) email the PDF as an attachment (via the Cloud Function, BR E.1)
+import { useOnline } from '../composables/useOnline'
 import { ref, computed } from 'vue'
 import InteractiveTable from '../components/InteractiveTable.vue'
 import EmailReportDialog from '../components/EmailReportDialog.vue'
@@ -10,6 +11,7 @@ import { useListings } from '../composables/useListings'
 import { categories, getCategory } from '../data/categories'
 import { mockExchanges } from '../data/mockExchanges'
 import { downloadCsv, downloadPdf } from '../utils/exporters'
+const { isOnline } = useOnline()
 
 const { listings } = useListings()
 
@@ -145,7 +147,8 @@ function onSent(address) {
             <button
               type="button"
               class="btn btn-primary btn-sm"
-              :disabled="rows.length === 0"
+              :disabled="rows.length === 0 || !isOnline"
+              :title="!isOnline ? 'Emailing needs an internet connection' : undefined"
               @click="openEmail('Marketplace listings', 'ecoloop-listings', columns, rows)"
             >
               <i class="bi bi-envelope me-1" aria-hidden="true"></i>Email PDF
@@ -179,7 +182,8 @@ function onSent(address) {
             <button
               type="button"
               class="btn btn-primary btn-sm"
-              :disabled="rows.length === 0"
+              :disabled="rows.length === 0 || !isOnline"
+              :title="!isOnline ? 'Emailing needs an internet connection' : undefined"
               @click="openEmail('Exchange history', 'ecoloop-exchanges', columns, rows)"
             >
               <i class="bi bi-envelope me-1" aria-hidden="true"></i>Email PDF
@@ -212,7 +216,7 @@ function onSent(address) {
   border-radius: 999px;
   border: 1px solid currentColor;
 }
-.status-pill--completed { color: #1F5C4D; background: #DEEAE4; }
-.status-pill--pending { color: #6B4E0E; background: #F7EDCB; }
-.status-pill--cancelled { color: #8A2318; background: #F6E2D5; }
+.status-pill--completed { color: var(--ok-ink); background: var(--ok-bg); }
+.status-pill--pending { color: var(--wait-ink); background: var(--wait-bg); }
+.status-pill--cancelled { color: var(--bad-ink); background: var(--bad-bg); }
 </style>

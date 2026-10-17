@@ -10,12 +10,15 @@
 // BR (E.3) — the map is never the only way in: every pin is a real
 // <button> with a label, and the side panel lists the same listings
 // and the route as text, all usable by keyboard and screen reader.
+import { useOnline } from '../composables/useOnline'
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { MAPBOX_TOKEN, hasMapbox, searchPlaces, getRoute } from '../utils/mapboxApi'
 import { MELBOURNE_CBD, listingCoords, distanceKm } from '../data/suburbs'
 import { getCategory } from '../data/categories'
+import { currentTheme } from '../composables/useA11yPrefs'
+const { isOnline } = useOnline()
 
 const props = defineProps({
   listings: { type: Array, required: true },
@@ -75,7 +78,7 @@ onMounted(() => {
       type: 'line',
       source: 'route',
       layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': '#1F5C4D', 'line-width': 5, 'line-opacity': 0.85 },
+      paint: { 'line-color': routeColor(), 'line-width': 5, 'line-opacity': 0.85 },
     })
     drawListingMarkers()
   })
@@ -101,6 +104,15 @@ function drawListingMarkers() {
     return new mapboxgl.Marker({ element: el }).setLngLat(coords).addTo(map)
   })
 }
+
+// The route line follows the chosen colour theme (F.1 accessibility themes).
+function routeColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--signal').trim() || '#1F5C4D'
+}
+watch(currentTheme, async () => {
+  await nextTick()
+  if (map?.getLayer('route-line')) map.setPaintProperty('route-line', 'line-color', routeColor())
+})
 
 watch(() => props.listings, drawListingMarkers)
 watch(selectedId, drawListingMarkers)
@@ -245,7 +257,7 @@ watch(profile, () => route.value && getDirections())
                 :aria-describedby="searchError ? 'place-search-error' : undefined"
                 :disabled="!hasMapbox"
               />
-              <button type="submit" class="btn btn-primary" :disabled="!hasMapbox || searching">
+              <button type="submit" class="btn btn-primary" :disabled="!hasMapbox || searching || !isOnline">
                 {{ searching ? 'Searching…' : 'Search' }}
               </button>
             </div>
@@ -253,6 +265,9 @@ watch(profile, () => route.value && getDirections())
           <button type="button" class="btn btn-ghost btn-sm w-100" :disabled="!hasMapbox" @click="useMyLocation">
             <i class="bi bi-crosshair me-1" aria-hidden="true"></i>Use my current location
           </button>
+          <p v-if="!isOnline" class="small offline-note mt-2 mb-0">
+            <i class="bi bi-wifi-off me-1" aria-hidden="true"></i>You're offline. Place search and directions need an internet connection.
+          </p>
           <p v-if="searchError" id="place-search-error" class="field-error mb-0">
             <i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ searchError }}
           </p>
@@ -292,7 +307,7 @@ watch(profile, () => route.value && getDirections())
           </fieldset>
 
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-primary btn-sm flex-grow-1" :disabled="routing || !hasMapbox" @click="getDirections">
+            <button type="button" class="btn btn-primary btn-sm flex-grow-1" :disabled="routing || !hasMapbox || !isOnline" @click="getDirections">
               {{ routing ? 'Finding route…' : 'Get directions' }}
             </button>
             <button type="button" class="btn btn-ghost btn-sm" @click="emit('request', selected.listing)">Request item</button>
@@ -387,13 +402,13 @@ fieldset { border: 0; padding: 0; margin: 0; }
   padding: 0;
 }
 .map-pin:hover { transform: scale(1.12); }
-.map-pin.is-selected { outline: 3px solid #C4501F; outline-offset: 2px; transform: scale(1.2); z-index: 2; }
-.map-pin:focus-visible { outline: 3px solid #C4501F; outline-offset: 2px; }
+.map-pin.is-selected { outline: 3px solid var(--focus, #C4501F); outline-offset: 2px; transform: scale(1.2); z-index: 2; }
+.map-pin:focus-visible { outline: 3px solid var(--focus, #C4501F); outline-offset: 2px; }
 .origin-pin {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #17211C;
+  background: var(--ink, #17211C);
   color: #fff;
   display: flex;
   align-items: center;

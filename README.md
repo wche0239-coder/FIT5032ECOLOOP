@@ -229,8 +229,8 @@ browser:
 
 Both functions reject signed-out callers, validate all input on the server,
 cap instances to limit cost, and log outcomes. Business rules are kept in
-plain modules (`validate.js`, `roles.js`) with unit tests:
-`cd functions && npm test` (12 tests).
+plain modules (`validate.js`, `roles.js`, `bulk.js`) with unit tests:
+`cd functions && npm test` (17 tests).
 
 **BR (E.2) — Geo location (Mapbox)**
 `/browse` → **Map view** (`src/components/ListingMap.vue`) shows every
@@ -280,6 +280,105 @@ Both tables on `/reports` have **Export CSV** and **Export PDF** buttons
 showing — after search, column filters and sort — across all pages. CSV is
 UTF-8 with proper quoting so it opens correctly in Excel; PDF is generated
 with jsPDF + AutoTable (automatically landscape for wide tables).
+
+## Category F — Innovation (BR F.1)
+
+### F.1 (1) Admin dashboard with interactive charts
+`/admin` (admin role only) is a dashboard for GreenLoop Collective staff:
+
+- **Community:** account totals and a breakdown by role (individual,
+  business, admin) as tiles and a chart, plus the user table where admins
+  change roles (via the `setUserRole` Cloud Function).
+- **Exchange activity:** read live from the Firestore `exchanges`
+  collection. One filter row (period and category) rescopes every number
+  and chart below it: total exchanges, completed exchanges, kilograms kept
+  out of landfill and completion rate, a monthly "kg kept out of landfill"
+  chart and a stacked "exchanges by status" chart.
+- **Interactive:** hover or tap a bar for its exact value, click a legend
+  item to hide a status, and filters animate the charts in place.
+- **Accessible:** each chart has a text summary for screen readers and a
+  "Show as table" toggle with the same numbers, so nothing depends on
+  seeing the chart or using a mouse. Status colours are always paired with
+  text labels.
+- **Data:** an admin can load the 86-row demo history into Firestore with
+  one button (`seedDemoExchanges` Cloud Function, admin-only and
+  idempotent). Firestore rules let only admins read `exchanges`; nobody
+  can write to it from the browser.
+- Charts use Chart.js through a reusable `ChartCard.vue`; the maths lives
+  in `src/utils/dashboardStats.js` (pure functions, unit-tested).
+
+### F.1 (2) Bulk email to selected users
+On the Admin dashboard, admins tick users in the user table (or "Select all
+shown" after searching or filtering, e.g. all business accounts) and press
+**Email selected** to write an announcement.
+
+- The `sendBulkEmail` Cloud Function re-checks that the caller is an admin,
+  validates the subject and message (including blocking newlines in the
+  subject, a header-injection trick), and accepts **user ids only**: it looks
+  up email addresses itself, so a tampered request can't use EcoLoop's
+  SendGrid account to email arbitrary people.
+- Each person gets their own copy starting "Hi <name>,", so nobody sees the
+  other recipients' addresses. Up to 100 recipients per send.
+- Every send is recorded in the `announcements` collection (who, when, how
+  many) for accountability; only admins can read it.
+- Validation is unit-tested (`functions/bulk.test.js`).
+
+### F.1 (3) Offline features
+Volunteers and residents often use EcoLoop on phones with patchy signal.
+Three offline features keep it usable:
+
+1. **Online/offline detection** (`src/composables/useOnline.js`,
+   `ConnectionBanner.vue`): a banner announces when the device goes offline
+   (and briefly when it reconnects; screen readers hear both). Actions that
+   need the internet (logging in, emailing, map search and directions,
+   admin changes) are paused with a short explanation instead of failing
+   with an error. Exporting CSV/PDF and browsing keep working.
+2. **Works with no connection** (`vite-plugin-pwa`, Workbox): a service
+   worker caches the app itself, so after one visit EcoLoop opens and
+   navigates even fully offline. Product photos are cached when first
+   viewed; Firebase, SendGrid and Mapbox requests are never cached. The
+   web app manifest and icons make it installable to a phone's home screen.
+   `firebase.json` serves `sw.js` and `index.html` with `no-cache`, so new
+   deployments reach users straight away.
+3. **Automatic draft saving** (Post an item): everything typed is saved to
+   this device as you go (localStorage), restored next time with a notice
+   and a "Start over" option, and cleared when the item is posted. A dropped
+   connection or closed tab never loses a half-written listing. Posting
+   itself also works offline (the pickup location falls back to the suburb
+   centre when the map service can't be reached).
+
+### F.1 (4) Accessibility themes and display settings
+An **Accessibility** button in the navbar (visible on phones without opening
+the menu) opens a settings dialog (`AccessibilityPanel.vue`,
+`src/composables/useA11yPrefs.js`). Every theme meets WCAG 2.1 AA; the
+settings let each person go further for their own needs:
+
+| Setting | What it does |
+| --- | --- |
+| Colour theme | **Soft mint** (default), **Classic green** (the original design), **High contrast** (black on white, 2px borders, underlined blue links, black-and-amber focus ring), **Colour-blind safe** (red/green meanings replaced with Okabe-Ito blue/orange) |
+| Text size | Standard, Large (112.5%), Extra large (125%); the whole layout scales with it |
+| Easy-to-read font | Atkinson Hyperlegible, designed for low vision (loaded only when chosen) |
+| Highlight links | Underlines and shades every link, so links never rely on colour |
+| Reduce motion | Turns off animation and smooth scrolling |
+| Read aloud | Reads the current page with the browser's built-in voice |
+
+How it works:
+
+- Themes are sets of CSS custom properties on `<html data-theme="…">` in
+  `src/style.css`. Components read only these tokens, so every page follows.
+- The admin charts and the map's route line follow the theme too. In High
+  contrast the status chart uses texture (solid, hatched, outlined) as well
+  as colour; in Colour-blind safe it uses blue, orange and purple.
+- The defaults follow the device: `prefers-contrast: more` starts in High
+  contrast and `prefers-reduced-motion` turns on Reduce motion.
+- Settings are saved on the device (localStorage, wrapped in try/catch), and
+  a small script in `index.html` applies them before the page draws, so it
+  never flashes in the wrong theme.
+- Every control is a native radio button, switch or button with a label;
+  changes are announced to screen readers.
+
+Checked with axe-core: 0 WCAG 2.1 A/AA violations on every page in all four
+themes, and no horizontal scrolling at 390px wide with Extra large text.
 
 ## Notes for markers
 

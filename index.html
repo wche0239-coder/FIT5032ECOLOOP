@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EcoLoop — Local Circular Economy Marketplace</title>
     <meta name="description" content="EcoLoop connects Melbourne residents and small businesses to give, swap and resell surplus instead of sending it to landfill." />
+    <link rel="icon" type="image/png" href="./icon-192.png" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <meta name="theme-color" content="#3EC1AC" />
+    <script>
+      // Apply the saved display settings before the page draws, so it never
+      // flashes in the wrong theme or text size (see useA11yPrefs.js).
+      (function () {
+        var r = document.documentElement, p = {}
+        try { p = JSON.parse(localStorage.getItem('ecoloop_a11y_prefs') || '{}') || {} } catch (e) {}
+        var hc = window.matchMedia && (matchMedia('(prefers-contrast: more)').matches || matchMedia('(forced-colors: active)').matches)
+        var themes = ['mint', 'classic', 'contrast', 'cvd'], sizes = ['normal', 'large', 'x-large']
+        r.setAttribute('data-theme', themes.indexOf(p.theme) > -1 ? p.theme : hc ? 'contrast' : 'mint')
+        r.setAttribute('data-text-size', sizes.indexOf(p.textSize) > -1 ? p.textSize : 'normal')
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">

@@ -38,6 +38,19 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Exchange history for the admin dashboard (F.1). Admins can read it;
+    // nobody writes from the browser (rows are loaded by a Cloud Function).
+    match /exchanges/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Record of bulk announcements (F.1), written only by sendBulkEmail.
+    match /announcements/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // Everything else is closed by default.
     match /{document=**} {
       allow read, write: if false;
